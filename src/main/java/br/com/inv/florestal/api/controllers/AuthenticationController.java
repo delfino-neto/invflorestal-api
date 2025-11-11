@@ -73,8 +73,8 @@ public class AuthenticationController {
         AuthenticationResponse auth = service.authenticate(request);
 
         Cookie cookie = new Cookie("auth-token-jwt", auth.getToken());
-        cookie.setHttpOnly(true); 
-        cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
         cookie.setPath("/");
         cookie.setMaxAge(60 * 60);
 
@@ -87,7 +87,7 @@ public class AuthenticationController {
     public ResponseEntity<?> logout(HttpServletResponse response) {
         Cookie cookie = new Cookie("auth-token-jwt", null);
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);
+        cookie.setSecure(false);
         cookie.setPath("/");
         cookie.setMaxAge(0);
         response.addCookie(cookie);

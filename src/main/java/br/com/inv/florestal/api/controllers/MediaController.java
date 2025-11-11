@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/media")
+@RequestMapping("/media")
 public class MediaController {
 
     private final MediaService mediaService;

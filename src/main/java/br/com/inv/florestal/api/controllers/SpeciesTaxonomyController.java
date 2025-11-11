@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/species-taxonomy")
+@RequestMapping("/species-taxonomy")
 public class SpeciesTaxonomyController {
 
     private final SpeciesTaxonomyService speciesTaxonomyService;

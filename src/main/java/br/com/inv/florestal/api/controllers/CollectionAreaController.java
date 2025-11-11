@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/collection-areas")
+@RequestMapping("/collection-areas")
 public class CollectionAreaController {
 
     private final CollectionAreaService collectionAreaService;

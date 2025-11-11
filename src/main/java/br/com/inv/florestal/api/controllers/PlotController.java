@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/plots")
+@RequestMapping("/plots")
 public class PlotController {
 
     private final PlotService plotService;
