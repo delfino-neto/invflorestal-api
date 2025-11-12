@@ -30,9 +30,10 @@ public class CollectionAreaController {
     @GetMapping
     public ResponseEntity<Page<CollectionAreaRepresentation>> search(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
-            @RequestParam(value = "size", defaultValue = "10") Integer size
+            @RequestParam(value = "size", defaultValue = "10") Integer size,
+            @RequestParam(value = "search", required = false) String searchTerm
     ) {
-        return ResponseEntity.ok(collectionAreaService.search(page, size));
+        return ResponseEntity.ok(collectionAreaService.search(page, size, searchTerm));
     }
 
     @GetMapping("/{id}")

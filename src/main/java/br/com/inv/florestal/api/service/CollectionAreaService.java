@@ -49,9 +49,12 @@ public class CollectionAreaService {
         return toRepresentation(collectionArea);
     }
 
-    public Page<CollectionAreaRepresentation> search(Integer page, Integer size) {
-        return collectionAreaRepository.findAll(PageRequest.of(page, size))
-                .map(this::toRepresentation);
+    public Page<CollectionAreaRepresentation> search(Integer page, Integer size, String searchTerm) {
+        System.out.println("SEARCH TERM: " + searchTerm);
+        return collectionAreaRepository.search(
+                searchTerm,
+                PageRequest.of(page, size)
+        ).map(this::toRepresentation);
     }
 
     public Optional<CollectionAreaRepresentation> findById(Long id) {
