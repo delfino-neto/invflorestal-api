@@ -9,11 +9,13 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UserRepresentation {
+    private Long id;
     private String name;
     private String email;
     private List<String> roles;
 
     public UserRepresentation(User user){
+        this.id = user.getId();
         this.name = user.fullName();
         this.email = user.getEmail();
         this.roles = user.getRoles().stream().map(role -> role.getName()).toList();
