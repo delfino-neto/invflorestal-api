@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -28,9 +29,21 @@ public class SpeciesTaxonomyService {
         return toRepresentation(speciesTaxonomyRepository.save(speciesTaxonomy));
     }
 
-    public Page<SpeciesTaxonomyRepresentation> search(Integer page, Integer size) {
-        return speciesTaxonomyRepository.findAll(PageRequest.of(page, size))
-                .map(this::toRepresentation);
+    public Page<SpeciesTaxonomyRepresentation> search(Integer page, Integer size, String searchTerm, String family, String genus) {
+        return speciesTaxonomyRepository.searchWithFilters(
+                searchTerm, 
+                family, 
+                genus, 
+                PageRequest.of(page, size)
+        ).map(this::toRepresentation);
+    }
+    
+    public List<String> getDistinctFamilies() {
+        return speciesTaxonomyRepository.findDistinctFamilies();
+    }
+    
+    public List<String> getDistinctGenera() {
+        return speciesTaxonomyRepository.findDistinctGenera();
     }
 
     public Optional<SpeciesTaxonomyRepresentation> findById(Long id) {
