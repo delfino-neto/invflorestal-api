@@ -45,7 +45,7 @@ public class Plot {
     @Column(name = "plot_code")
     private String plotCode;
 
-    @Column(name = "area_m2", precision = 10, scale = 2)
+    @Column(name = "area_m2", precision = 15, scale = 2)
     private BigDecimal areaM2;
 
     @Column(name = "slope_deg", precision = 5, scale = 2)
