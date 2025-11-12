@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,8 +18,13 @@ public class CollectionAreaController {
     private final CollectionAreaService collectionAreaService;
 
     @PostMapping
-    public ResponseEntity<CollectionAreaRepresentation> create(@RequestBody CollectionAreaRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(collectionAreaService.create(request));
+    public ResponseEntity<CollectionAreaRepresentation> create(
+            @RequestBody CollectionAreaRequest request,
+            Authentication authentication
+    ) {
+        String userEmail = authentication.getName();
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(collectionAreaService.create(request, userEmail));
     }
 
     @GetMapping
@@ -39,9 +45,11 @@ public class CollectionAreaController {
     @PutMapping("/{id}")
     public ResponseEntity<CollectionAreaRepresentation> update(
             @PathVariable Long id,
-            @RequestBody CollectionAreaRequest request
+            @RequestBody CollectionAreaRequest request,
+            Authentication authentication
     ) {
-        return ResponseEntity.ok(collectionAreaService.update(id, request));
+        String userEmail = authentication.getName();
+        return ResponseEntity.ok(collectionAreaService.update(id, request, userEmail));
     }
 
     @DeleteMapping("/{id}")

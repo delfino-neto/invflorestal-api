@@ -6,10 +6,13 @@ import br.com.inv.florestal.api.models.collection.CollectionArea;
 import br.com.inv.florestal.api.models.user.User;
 import br.com.inv.florestal.api.repository.CollectionAreaRepository;
 import br.com.inv.florestal.api.repository.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -19,18 +22,31 @@ public class CollectionAreaService {
 
     private final CollectionAreaRepository collectionAreaRepository;
     private final UserRepository userRepository;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
 
-    public CollectionAreaRepresentation create(CollectionAreaRequest request) {
-        User createdBy = userRepository.findById(request.getCreatedById())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    @Transactional
+    public CollectionAreaRepresentation create(CollectionAreaRequest request, String userEmail) {
+        User createdBy = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
 
-        CollectionArea collectionArea = CollectionArea.builder()
-                .name(request.getName())
-                .geometry(request.getGeometry())
-                .createdBy(createdBy)
-                .notes(request.getNotes())
-                .build();
-        return toRepresentation(collectionAreaRepository.save(collectionArea));
+        // Usar query nativa para fazer o cast do geometry
+        String sql = "INSERT INTO collection_area (name, geometry, created_by, notes, created_at) " +
+                     "VALUES (?1, CAST(?2 AS polygon), ?3, ?4, CURRENT_TIMESTAMP) RETURNING id";
+        
+        Long id = ((Number) entityManager.createNativeQuery(sql)
+                .setParameter(1, request.getName())
+                .setParameter(2, request.getGeometry())
+                .setParameter(3, createdBy.getId())
+                .setParameter(4, request.getNotes())
+                .getSingleResult()).longValue();
+        
+        // Buscar o registro completo
+        CollectionArea collectionArea = collectionAreaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Failed to create collection area"));
+        
+        return toRepresentation(collectionArea);
     }
 
     public Page<CollectionAreaRepresentation> search(Integer page, Integer size) {
@@ -42,19 +58,32 @@ public class CollectionAreaService {
         return collectionAreaRepository.findById(id).map(this::toRepresentation);
     }
 
-    public CollectionAreaRepresentation update(Long id, CollectionAreaRequest request) {
+    @Transactional
+    public CollectionAreaRepresentation update(Long id, CollectionAreaRequest request, String userEmail) {
+        // Validar se o usuário existe
+        userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
+
+        // Verificar se a área existe
         CollectionArea collectionArea = collectionAreaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Collection Area not found"));
 
-        User createdBy = userRepository.findById(request.getCreatedById())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        // Usar query nativa para fazer o cast do geometry
+        String sql = "UPDATE collection_area SET name = ?1, geometry = CAST(?2 AS polygon), " +
+                     "notes = ?3, updated_at = CURRENT_TIMESTAMP WHERE id = ?4";
+        
+        entityManager.createNativeQuery(sql)
+                .setParameter(1, request.getName())
+                .setParameter(2, request.getGeometry())
+                .setParameter(3, request.getNotes())
+                .setParameter(4, id)
+                .executeUpdate();
+        
+        // Buscar o registro atualizado
+        collectionArea = collectionAreaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Failed to update collection area"));
 
-        collectionArea.setName(request.getName());
-        collectionArea.setGeometry(request.getGeometry());
-        collectionArea.setCreatedBy(createdBy);
-        collectionArea.setNotes(request.getNotes());
-
-        return toRepresentation(collectionAreaRepository.save(collectionArea));
+        return toRepresentation(collectionArea);
     }
 
     public void delete(Long id) {

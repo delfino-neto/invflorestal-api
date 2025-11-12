@@ -10,6 +10,5 @@ import lombok.Setter;
 public class CollectionAreaRequest {
     private String name;
     private String geometry;
-    private Long createdById;
     private String notes;
 }
