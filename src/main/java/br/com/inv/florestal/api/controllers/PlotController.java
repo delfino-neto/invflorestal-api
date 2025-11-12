@@ -24,8 +24,12 @@ public class PlotController {
     @GetMapping
     public ResponseEntity<Page<PlotRepresentation>> search(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
-            @RequestParam(value = "size", defaultValue = "10") Integer size
+            @RequestParam(value = "size", defaultValue = "10") Integer size,
+            @RequestParam(value = "areaId", required = false) Long areaId
     ) {
+        if (areaId != null) {
+            return ResponseEntity.ok(plotService.searchByArea(areaId, page, size));
+        }
         return ResponseEntity.ok(plotService.search(page, size));
     }
 
