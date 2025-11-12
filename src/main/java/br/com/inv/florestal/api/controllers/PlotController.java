@@ -1,5 +1,7 @@
 package br.com.inv.florestal.api.controllers;
 
+import br.com.inv.florestal.api.dto.BulkPlotImportRequest;
+import br.com.inv.florestal.api.dto.PlotImportRequest;
 import br.com.inv.florestal.api.dto.PlotRequest;
 import br.com.inv.florestal.api.dto.PlotRepresentation;
 import br.com.inv.florestal.api.service.PlotService;
@@ -8,6 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -52,5 +56,15 @@ public class PlotController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         plotService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<PlotRepresentation> importPlot(@RequestBody PlotImportRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(plotService.importPlot(request));
+    }
+
+    @PostMapping("/import/bulk")
+    public ResponseEntity<List<PlotRepresentation>> importPlots(@RequestBody BulkPlotImportRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(plotService.importPlots(request));
     }
 }
