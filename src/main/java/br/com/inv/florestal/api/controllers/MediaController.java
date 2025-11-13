@@ -3,7 +3,6 @@ package br.com.inv.florestal.api.controllers;
 import br.com.inv.florestal.api.dto.MediaRequest;
 import br.com.inv.florestal.api.dto.MediaRepresentation;
 import br.com.inv.florestal.api.service.MediaService;
-import br.com.inv.florestal.api.storage.StorageProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -11,47 +10,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/media")
 public class MediaController {
 
     private final MediaService mediaService;
-    private final StorageProperties storageProperties;
-
-    /**
-     * Endpoint de teste para verificar a configuração de upload
-     */
-    @GetMapping("/config")
-    public ResponseEntity<Map<String, Object>> getConfig() {
-        Map<String, Object> config = new HashMap<>();
-        config.put("uploadDirectory", storageProperties.getLocation());
-        config.put("uploadDirectoryAbsolute", Paths.get(storageProperties.getLocation()).toAbsolutePath().toString());
-        config.put("directoryExists", Files.exists(Paths.get(storageProperties.getLocation())));
-        config.put("directoryReadable", Files.isReadable(Paths.get(storageProperties.getLocation())));
-        config.put("directoryWritable", Files.isWritable(Paths.get(storageProperties.getLocation())));
-        return ResponseEntity.ok(config);
-    }
 
     @PostMapping
     public ResponseEntity<MediaRepresentation> create(@RequestBody MediaRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(mediaService.create(request));
     }
 
-    /**
-     * Upload de imagem para um espécime
-     * 
-     * @param objectId ID do espécime (SpecimenObject)
-     * @param file Arquivo de imagem
-     * @param description Descrição opcional da imagem
-     * @param uploadedById ID do usuário que fez upload (opcional - usa usuário autenticado se não informado)
-     * @return MediaRepresentation com dados da mídia criada
-     */
     @PostMapping("/upload/{objectId}")
     public ResponseEntity<MediaRepresentation> uploadImage(
             @PathVariable Long objectId,

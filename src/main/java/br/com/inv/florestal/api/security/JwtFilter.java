@@ -32,7 +32,6 @@ public class JwtFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        // Skip JWT filter for public endpoints
         String path = request.getServletPath();
         if (path.contains("/api/v1/auth") || path.startsWith("/uploads/")) {
             filterChain.doFilter(request, response);

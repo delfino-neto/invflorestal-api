@@ -21,20 +21,15 @@ public class MediaFileController {
 
     @GetMapping("/{filename:.+}")
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
-        System.out.println("\n\n\nServing file: " + filename + "\n\n\n");
         try {
-            log.info("Attempting to serve file: {}", filename);
             Resource resource = storageService.loadAsResource(filename);
-            
             String contentType = determineContentType(filename);
-            log.info("Serving file: {} with content-type: {}", filename, contentType);
 
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
                     .body(resource);
         } catch (StorageFileNotFoundException e) {
-            log.warn("File not found: {}", filename);
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
             log.error("Error serving file: {}", filename, e);

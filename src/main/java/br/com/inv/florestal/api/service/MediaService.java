@@ -51,7 +51,6 @@ public class MediaService {
             throw new RuntimeException("File is empty");
         }
 
-        // Validate image type
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             throw new RuntimeException("Only image files are allowed");
@@ -60,18 +59,15 @@ public class MediaService {
         SpecimenObject specimenObject = specimenObjectRepository.findById(objectId)
                 .orElseThrow(() -> new RuntimeException("Specimen Object not found"));
 
-        // Get user from uploadedById or from current authentication
         User uploadedBy;
         if (uploadedById != null) {
             uploadedBy = userRepository.findById(uploadedById)
                     .orElseThrow(() -> new RuntimeException("User not found"));
         } else {
-            // Try to get the current authenticated user
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.getPrincipal() instanceof User) {
                 uploadedBy = (User) authentication.getPrincipal();
             } else if (authentication != null && authentication.getName() != null) {
-                // Try to find user by email
                 uploadedBy = userRepository.findByEmail(authentication.getName())
                         .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
             } else {
@@ -80,10 +76,8 @@ public class MediaService {
         }
 
         try {
-            // Store file and get filename
             String filename = storageService.store(file);
 
-            // Create media record with URL path
             Media media = Media.builder()
                     .object(specimenObject)
                     .url("/uploads/media/" + filename)
@@ -135,7 +129,6 @@ public class MediaService {
         Media media = mediaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Media not found"));
 
-        // Delete physical file
         try {
             String url = media.getUrl();
             if (url != null && url.startsWith("/uploads/media/")) {
@@ -143,8 +136,7 @@ public class MediaService {
                 storageService.delete(filename);
             }
         } catch (Exception e) {
-            // Log error but don't fail the operation
-            System.err.println("Failed to delete file: " + e.getMessage());
+            // Ignore file deletion errors
         }
 
         mediaRepository.deleteById(id);
