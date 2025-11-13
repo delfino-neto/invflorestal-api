@@ -7,7 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,9 +35,12 @@ public class SpeciesInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "object_id")
+    @ManyToOne
+    @JoinColumn(name = "object_id", nullable = false)
     private SpecimenObject object;
+
+    @Column(name = "observation_date", nullable = false)
+    private LocalDateTime observationDate;
 
     @Column(name = "height_m", precision = 5, scale = 2)
     private BigDecimal heightM;

@@ -15,7 +15,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +28,19 @@ public class SpecimenObjectService {
     private final PlotRepository plotRepository;
     private final SpeciesTaxonomyRepository speciesTaxonomyRepository;
     private final UserRepository userRepository;
+    private final Random random = new Random();
+
+    // URLs mockadas de imagens de plantas/árvores do Unsplash
+    private static final List<String> SAMPLE_IMAGES = Arrays.asList(
+            "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=800",
+            "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=800",
+            "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=800",
+            "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=800",
+            "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
+            "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=800",
+            "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=800",
+            "https://images.unsplash.com/photo-1470058869958-2a77ade41c02?w=800"
+    );
 
     public SpecimenObjectRepresentation create(SpecimenObjectRequest request) {
         Plot plot = plotRepository.findById(request.getPlotId())
@@ -94,8 +110,15 @@ public class SpecimenObjectService {
                 .longitude(specimenObject.getLongitude())
                 .observerId(specimenObject.getObserver().getId())
                 .observerFullName(specimenObject.getObserver().fullName())
+                .imageUrls(generateMockImages())
                 .createdAt(specimenObject.getCreatedAt())
                 .updatedAt(specimenObject.getUpdatedAt())
                 .build();
+    }
+
+    // Método temporário para gerar imagens mockadas
+    private List<String> generateMockImages() {
+        int count = random.nextInt(4) + 1; // 1 a 4 imagens
+        return SAMPLE_IMAGES.subList(0, Math.min(count, SAMPLE_IMAGES.size()));
     }
 }
