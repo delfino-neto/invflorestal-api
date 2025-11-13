@@ -8,19 +8,16 @@ import br.com.inv.florestal.api.models.user.User;
 import br.com.inv.florestal.api.repository.MediaRepository;
 import br.com.inv.florestal.api.repository.SpecimenObjectRepository;
 import br.com.inv.florestal.api.repository.UserRepository;
+import br.com.inv.florestal.api.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +26,7 @@ public class MediaService {
     private final MediaRepository mediaRepository;
     private final SpecimenObjectRepository specimenObjectRepository;
     private final UserRepository userRepository;
-    private final String uploadDir = "uploads/media/";
+    private final StorageService storageService;
 
     public MediaRepresentation create(MediaRequest request) {
         SpecimenObject specimenObject = specimenObjectRepository.findById(request.getObjectId())
@@ -63,28 +60,30 @@ public class MediaService {
         SpecimenObject specimenObject = specimenObjectRepository.findById(objectId)
                 .orElseThrow(() -> new RuntimeException("Specimen Object not found"));
 
-        User uploadedBy = userRepository.findById(uploadedById)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        // Get user from uploadedById or from current authentication
+        User uploadedBy;
+        if (uploadedById != null) {
+            uploadedBy = userRepository.findById(uploadedById)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+        } else {
+            // Try to get the current authenticated user
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof User) {
+                uploadedBy = (User) authentication.getPrincipal();
+            } else if (authentication != null && authentication.getName() != null) {
+                // Try to find user by email
+                uploadedBy = userRepository.findByEmail(authentication.getName())
+                        .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+            } else {
+                throw new RuntimeException("No user specified and no authenticated user found");
+            }
+        }
 
         try {
-            // Create upload directory if it doesn't exist
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
+            // Store file and get filename
+            String filename = storageService.store(file);
 
-            // Generate unique filename
-            String originalFilename = file.getOriginalFilename();
-            String extension = originalFilename != null && originalFilename.contains(".") 
-                ? originalFilename.substring(originalFilename.lastIndexOf("."))
-                : ".jpg";
-            String filename = UUID.randomUUID().toString() + extension;
-
-            // Save file
-            Path filePath = uploadPath.resolve(filename);
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            // Create media record
+            // Create media record with URL path
             Media media = Media.builder()
                     .object(specimenObject)
                     .url("/uploads/media/" + filename)
@@ -94,9 +93,8 @@ public class MediaService {
                     .build();
 
             return toRepresentation(mediaRepository.save(media));
-
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to upload file: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
         }
     }
 
@@ -141,10 +139,10 @@ public class MediaService {
         try {
             String url = media.getUrl();
             if (url != null && url.startsWith("/uploads/media/")) {
-                Path filePath = Paths.get("uploads/media/" + url.substring(url.lastIndexOf("/") + 1));
-                Files.deleteIfExists(filePath);
+                String filename = url.substring(url.lastIndexOf("/") + 1);
+                storageService.delete(filename);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             // Log error but don't fail the operation
             System.err.println("Failed to delete file: " + e.getMessage());
         }
