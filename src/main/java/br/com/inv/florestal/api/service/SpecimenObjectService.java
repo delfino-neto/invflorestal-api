@@ -103,6 +103,8 @@ public class SpecimenObjectService {
                 .id(specimenObject.getId())
                 .plotId(specimenObject.getPlot().getId())
                 .plotCode(specimenObject.getPlot().getPlotCode())
+                .areaId(specimenObject.getPlot().getArea() != null ? specimenObject.getPlot().getArea().getId() : null)
+                .areaName(specimenObject.getPlot().getArea() != null ? specimenObject.getPlot().getArea().getName() : null)
                 .speciesId(specimenObject.getSpecies().getId())
                 .speciesScientificName(specimenObject.getSpecies().getScientificName())
                 .speciesCommonName(specimenObject.getSpecies().getCommonName())

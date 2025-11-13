@@ -15,6 +15,8 @@ public class SpecimenObjectRepresentation {
     private Long id;
     private Long plotId;
     private String plotCode;
+    private Long areaId;
+    private String areaName;
     private Long speciesId;
     private String speciesScientificName;
     private String speciesCommonName;
