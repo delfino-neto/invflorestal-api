@@ -14,9 +14,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 
     @Query("""
-       SELECT new br.com.inv.florestal.api.dto.UserRepresentation(u) 
+       SELECT DISTINCT new br.com.inv.florestal.api.dto.UserRepresentation(u) 
        FROM User u
-       INNER JOIN u.roles
+       LEFT JOIN u.roles
     """)
     Page<UserRepresentation> search(PageRequest page);
 
