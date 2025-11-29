@@ -55,6 +55,10 @@ public class AuthenticationService {
         User user = (User) auth.getPrincipal();
         claims.put("fullName", user.fullName());
 
+        // Update last login timestamp
+        user.setLastLogin(java.time.LocalDateTime.now());
+        userRepository.save(user);
+
         String token = jwtService.generateToken(claims, user);
         return AuthenticationResponse.builder().token(token).build();
     }

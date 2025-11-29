@@ -22,6 +22,7 @@ public class UserRepresentation {
     private List<String> roles;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime lastLogin;
 
     public UserRepresentation(User user){
         this.id = user.getId();
@@ -35,5 +36,6 @@ public class UserRepresentation {
         this.roles = user.getRoles().stream().map(role -> role.getName()).toList();
         this.createdAt = user.getCreatedAt();
         this.updatedAt = user.getUpdateAt();
+        this.lastLogin = user.getLastLogin();
     }
 }

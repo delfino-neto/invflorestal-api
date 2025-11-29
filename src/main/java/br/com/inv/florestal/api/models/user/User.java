@@ -73,6 +73,8 @@ public class User implements UserDetails, Principal {
     @Column(insertable = false)
     private LocalDateTime updateAt;
 
+    private LocalDateTime lastLogin;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
