@@ -35,6 +35,11 @@ public class SpecimenObjectController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+    
+    @GetMapping("/by-area/{areaId}")
+    public ResponseEntity<java.util.List<SpecimenObjectRepresentation>> findByCollectionAreaId(@PathVariable Long areaId) {
+        return ResponseEntity.ok(specimenObjectService.findByCollectionAreaId(areaId));
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<SpecimenObjectRepresentation> update(

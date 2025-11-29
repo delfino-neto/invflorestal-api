@@ -67,6 +67,12 @@ public class SpecimenObjectService {
     public Optional<SpecimenObjectRepresentation> findById(Long id) {
         return specimenObjectRepository.findById(id).map(this::toRepresentation);
     }
+    
+    public List<SpecimenObjectRepresentation> findByCollectionAreaId(Long areaId) {
+        return specimenObjectRepository.findByCollectionAreaId(areaId).stream()
+                .map(this::toRepresentation)
+                .collect(Collectors.toList());
+    }
 
     public SpecimenObjectRepresentation update(Long id, SpecimenObjectRequest request) {
         SpecimenObject specimenObject = specimenObjectRepository.findById(id)
