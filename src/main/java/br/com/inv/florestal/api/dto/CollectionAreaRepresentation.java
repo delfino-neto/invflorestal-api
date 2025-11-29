@@ -18,4 +18,6 @@ public class CollectionAreaRepresentation {
     private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Long speciesCount;
+    private Long specimensCount;
 }

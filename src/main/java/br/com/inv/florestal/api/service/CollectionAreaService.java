@@ -94,6 +94,9 @@ public class CollectionAreaService {
     }
 
     private CollectionAreaRepresentation toRepresentation(CollectionArea collectionArea) {
+        Long speciesCount = collectionAreaRepository.countSpeciesByAreaId(collectionArea.getId());
+        Long specimensCount = collectionAreaRepository.countSpecimensByAreaId(collectionArea.getId());
+        
         return CollectionAreaRepresentation.builder()
                 .id(collectionArea.getId())
                 .name(collectionArea.getName())
@@ -103,6 +106,8 @@ public class CollectionAreaService {
                 .notes(collectionArea.getNotes())
                 .createdAt(collectionArea.getCreatedAt())
                 .updatedAt(collectionArea.getUpdatedAt())
+                .speciesCount(speciesCount != null ? speciesCount : 0L)
+                .specimensCount(specimensCount != null ? specimensCount : 0L)
                 .build();
     }
 }

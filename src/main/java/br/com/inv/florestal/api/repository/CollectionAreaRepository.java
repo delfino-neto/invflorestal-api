@@ -17,4 +17,18 @@ public interface CollectionAreaRepository extends JpaRepository<CollectionArea, 
     """)
     Page<CollectionArea> search(String searchTerm, Pageable pageable);
 
+    @Query("""
+        SELECT COUNT(DISTINCT s.species.id)
+        FROM SpecimenObject s
+        WHERE s.plot.area.id = :areaId
+    """)
+    Long countSpeciesByAreaId(Long areaId);
+
+    @Query("""
+        SELECT COUNT(s)
+        FROM SpecimenObject s
+        WHERE s.plot.area.id = :areaId
+    """)
+    Long countSpecimensByAreaId(Long areaId);
+
 }
