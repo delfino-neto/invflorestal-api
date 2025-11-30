@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.inv.florestal.api.aspect.Auditable;
 import br.com.inv.florestal.api.dto.UserRepresentation;
 import br.com.inv.florestal.api.dto.UserRequest;
 import br.com.inv.florestal.api.dto.UserUpdateRequest;
@@ -35,6 +36,7 @@ public class UserService {
     }
 
     @Transactional
+    @Auditable(action = br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.CREATE, entityName = "User", description = "Novo usuário criado")
     public UserRepresentation create(UserRequest request) {
         // Verificar se o email já existe
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -64,6 +66,7 @@ public class UserService {
     }
 
     @Transactional
+    @Auditable(action = br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.UPDATE, entityName = "User", description = "Usuário atualizado")
     public UserRepresentation update(Long id, UserUpdateRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -105,6 +108,7 @@ public class UserService {
     }
 
     @Transactional
+    @Auditable(action = br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.DELETE, entityName = "User", description = "Usuário excluído")
     public void delete(Long id) {
         if (!userRepository.existsById(id)) {
             throw new RuntimeException("User not found");
@@ -113,6 +117,7 @@ public class UserService {
     }
 
     @Transactional
+    @Auditable(action = br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.STATUS_CHANGE, entityName = "User", description = "Status do usuário alterado")
     public UserRepresentation toggleStatus(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -123,6 +128,7 @@ public class UserService {
     }
 
     @Transactional
+    @Auditable(action = br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.LOCK_CHANGE, entityName = "User", description = "Bloqueio do usuário alterado")
     public UserRepresentation toggleLock(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));

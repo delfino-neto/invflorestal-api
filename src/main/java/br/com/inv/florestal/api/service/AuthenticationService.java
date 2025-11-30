@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import br.com.inv.florestal.api.aspect.Auditable;
 import br.com.inv.florestal.api.dto.AuthenticationRequest;
 import br.com.inv.florestal.api.dto.AuthenticationResponse;
 import br.com.inv.florestal.api.dto.RegistrationRequest;
@@ -47,6 +48,7 @@ public class AuthenticationService {
         // sendValidationEmail();
     }
 
+    @Auditable(action = br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.LOGIN, entityName = "User", description = "Login realizado")
     public AuthenticationResponse authenticate(AuthenticationRequest request){
         Authentication auth = authManager.authenticate(
             new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())

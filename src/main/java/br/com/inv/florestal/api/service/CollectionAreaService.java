@@ -14,6 +14,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.inv.florestal.api.aspect.Auditable;
+import br.com.inv.florestal.api.models.audit.AuditLog.AuditAction;
+
 import java.util.Optional;
 
 @Service
@@ -27,6 +30,7 @@ public class CollectionAreaService {
     private EntityManager entityManager;
 
     @Transactional
+    @Auditable(action = AuditAction.CREATE, entityName = "CollectionArea", description = "Nova área de coleta criada")
     public CollectionAreaRepresentation create(CollectionAreaRequest request, String userEmail) {
         User createdBy = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
@@ -62,6 +66,7 @@ public class CollectionAreaService {
     }
 
     @Transactional
+    @Auditable(action = AuditAction.UPDATE, entityName = "CollectionArea", description = "Área de coleta atualizada")
     public CollectionAreaRepresentation update(Long id, CollectionAreaRequest request, String userEmail) {
         // Validar se o usuário existe
         userRepository.findByEmail(userEmail)
@@ -89,6 +94,7 @@ public class CollectionAreaService {
         return toRepresentation(collectionArea);
     }
 
+    @Auditable(action = AuditAction.DELETE, entityName = "CollectionArea", description = "Área de coleta excluída")
     public void delete(Long id) {
         collectionAreaRepository.deleteById(id);
     }

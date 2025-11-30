@@ -16,6 +16,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import br.com.inv.florestal.api.aspect.Auditable;
+import br.com.inv.florestal.api.models.audit.AuditLog.AuditAction;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,6 +41,7 @@ public class SpecimenObjectService {
     private final UserRepository userRepository;
     private final MediaRepository mediaRepository;
 
+    @Auditable(action = AuditAction.CREATE, entityName = "SpecimenObject", description = "Novo espécime registrado")
     public SpecimenObjectRepresentation create(SpecimenObjectRequest request) {
         Plot plot = plotRepository.findById(request.getPlotId())
                 .orElseThrow(() -> new RuntimeException("Plot not found"));
@@ -74,6 +78,7 @@ public class SpecimenObjectService {
                 .collect(Collectors.toList());
     }
 
+    @Auditable(action = AuditAction.UPDATE, entityName = "SpecimenObject", description = "Espécime atualizado")
     public SpecimenObjectRepresentation update(Long id, SpecimenObjectRequest request) {
         SpecimenObject specimenObject = specimenObjectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Specimen Object not found"));
@@ -96,6 +101,7 @@ public class SpecimenObjectService {
         return toRepresentation(specimenObjectRepository.save(specimenObject));
     }
 
+    @Auditable(action = AuditAction.DELETE, entityName = "SpecimenObject", description = "Espécime excluído")
     public void delete(Long id) {
         specimenObjectRepository.deleteById(id);
     }
