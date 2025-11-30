@@ -36,14 +36,25 @@ public class CollectionAreaService {
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
 
         // Usar query nativa para fazer o cast do geometry
-        String sql = "INSERT INTO collection_area (name, geometry, created_by, notes, created_at) " +
-                     "VALUES (?1, CAST(?2 AS polygon), ?3, ?4, CURRENT_TIMESTAMP) RETURNING id";
+        String sql = "INSERT INTO collection_area (name, geometry, created_by, notes, biome, " +
+                     "climate_zone, soil_type, conservation_status, vegetation_type, altitude_m, " +
+                     "protected_area, protected_area_name, land_owner, created_at) " +
+                     "VALUES (?1, CAST(?2 AS polygon), ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, CURRENT_TIMESTAMP) RETURNING id";
         
         Long id = ((Number) entityManager.createNativeQuery(sql)
                 .setParameter(1, request.getName())
                 .setParameter(2, request.getGeometry())
                 .setParameter(3, createdBy.getId())
                 .setParameter(4, request.getNotes())
+                .setParameter(5, request.getBiome())
+                .setParameter(6, request.getClimateZone())
+                .setParameter(7, request.getSoilType())
+                .setParameter(8, request.getConservationStatus())
+                .setParameter(9, request.getVegetationType())
+                .setParameter(10, request.getAltitudeM())
+                .setParameter(11, request.getProtectedArea())
+                .setParameter(12, request.getProtectedAreaName())
+                .setParameter(13, request.getLandOwner())
                 .getSingleResult()).longValue();
         
         // Buscar o registro completo
@@ -78,13 +89,25 @@ public class CollectionAreaService {
 
         // Usar query nativa para fazer o cast do geometry
         String sql = "UPDATE collection_area SET name = ?1, geometry = CAST(?2 AS polygon), " +
-                     "notes = ?3, updated_at = CURRENT_TIMESTAMP WHERE id = ?4";
+                     "notes = ?3, biome = ?4, climate_zone = ?5, soil_type = ?6, " +
+                     "conservation_status = ?7, vegetation_type = ?8, altitude_m = ?9, " +
+                     "protected_area = ?10, protected_area_name = ?11, land_owner = ?12, " +
+                     "updated_at = CURRENT_TIMESTAMP WHERE id = ?13";
         
         entityManager.createNativeQuery(sql)
                 .setParameter(1, request.getName())
                 .setParameter(2, request.getGeometry())
                 .setParameter(3, request.getNotes())
-                .setParameter(4, id)
+                .setParameter(4, request.getBiome())
+                .setParameter(5, request.getClimateZone())
+                .setParameter(6, request.getSoilType())
+                .setParameter(7, request.getConservationStatus())
+                .setParameter(8, request.getVegetationType())
+                .setParameter(9, request.getAltitudeM())
+                .setParameter(10, request.getProtectedArea())
+                .setParameter(11, request.getProtectedAreaName())
+                .setParameter(12, request.getLandOwner())
+                .setParameter(13, id)
                 .executeUpdate();
         
         // Buscar o registro atualizado
@@ -110,6 +133,15 @@ public class CollectionAreaService {
                 .createdById(collectionArea.getCreatedBy().getId())
                 .createdByFullName(collectionArea.getCreatedBy().fullName())
                 .notes(collectionArea.getNotes())
+                .biome(collectionArea.getBiome())
+                .climateZone(collectionArea.getClimateZone())
+                .soilType(collectionArea.getSoilType())
+                .conservationStatus(collectionArea.getConservationStatus())
+                .vegetationType(collectionArea.getVegetationType())
+                .altitudeM(collectionArea.getAltitudeM())
+                .protectedArea(collectionArea.getProtectedArea())
+                .protectedAreaName(collectionArea.getProtectedAreaName())
+                .landOwner(collectionArea.getLandOwner())
                 .createdAt(collectionArea.getCreatedAt())
                 .updatedAt(collectionArea.getUpdatedAt())
                 .speciesCount(speciesCount != null ? speciesCount : 0L)

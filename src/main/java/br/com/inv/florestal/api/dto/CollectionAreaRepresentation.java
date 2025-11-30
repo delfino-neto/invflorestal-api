@@ -16,6 +16,15 @@ public class CollectionAreaRepresentation {
     private Long createdById;
     private String createdByFullName;
     private String notes;
+    private String biome;
+    private String climateZone;
+    private String soilType;
+    private String conservationStatus;
+    private String vegetationType;
+    private java.math.BigDecimal altitudeM;
+    private Boolean protectedArea;
+    private String protectedAreaName;
+    private String landOwner;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long speciesCount;

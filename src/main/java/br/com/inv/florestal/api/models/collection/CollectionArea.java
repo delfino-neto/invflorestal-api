@@ -48,6 +48,33 @@ public class CollectionArea {
     @Column(name = "notes", columnDefinition = "text")
     private String notes;
 
+    @Column(name = "biome")
+    private String biome;
+
+    @Column(name = "climate_zone")
+    private String climateZone;
+
+    @Column(name = "soil_type")
+    private String soilType;
+
+    @Column(name = "conservation_status")
+    private String conservationStatus;
+
+    @Column(name = "vegetation_type")
+    private String vegetationType;
+
+    @Column(name = "altitude_m", precision = 8, scale = 2)
+    private java.math.BigDecimal altitudeM;
+
+    @Column(name = "protected_area")
+    private Boolean protectedArea;
+
+    @Column(name = "protected_area_name")
+    private String protectedAreaName;
+
+    @Column(name = "land_owner")
+    private String landOwner;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
