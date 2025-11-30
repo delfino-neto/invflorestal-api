@@ -8,11 +8,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 import br.com.inv.florestal.api.models.audit.AuditLog;
 import br.com.inv.florestal.api.models.audit.AuditLog.AuditAction;
@@ -96,5 +100,19 @@ public class AuditLogController {
             PageRequest.of(page, size)
         );
         return ResponseEntity.ok(auditLogs);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> deleteAuditLog(@PathVariable Long id) {
+        auditService.deleteAuditLog(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/batch")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> deleteAuditLogs(@RequestBody List<Long> ids) {
+        auditService.deleteAuditLogs(ids);
+        return ResponseEntity.noContent().build();
     }
 }

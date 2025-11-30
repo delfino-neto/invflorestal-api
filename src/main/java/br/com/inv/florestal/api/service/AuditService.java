@@ -1,6 +1,7 @@
 package br.com.inv.florestal.api.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -183,5 +184,17 @@ public class AuditService {
         Pageable pageable
     ) {
         return auditLogRepository.findByTimestampBetween(startDate, endDate, pageable);
+    }
+
+    @Transactional
+    public void deleteAuditLog(Long id) {
+        auditLogRepository.deleteById(id);
+        log.debug("Audit log deleted: {}", id);
+    }
+
+    @Transactional
+    public void deleteAuditLogs(List<Long> ids) {
+        auditLogRepository.deleteAllById(ids);
+        log.debug("Audit logs deleted in batch: {} items", ids.size());
     }
 }
