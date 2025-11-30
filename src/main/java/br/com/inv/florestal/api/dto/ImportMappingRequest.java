@@ -35,7 +35,7 @@ public class ImportMappingRequest {
     private Boolean autoCreateSpecies;
     
     /**
-     * ID da área de coleta onde os espécimes serão importados
+     * ID do plot onde os espécimes serão cadastrados
      */
-    private Long collectionAreaId;
+    private Long plotId;
 }

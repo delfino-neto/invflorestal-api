@@ -172,14 +172,13 @@ public class DataImportService {
             .speciesCreated(0);
         
         List<ImportError> errors = new ArrayList<>();
+        
+        // Busca o plot onde os espécimes serão cadastrados
         Plot plot = null;
-        if (mapping.getCollectionAreaId() != null) {
-            // Busca o primeiro plot da área de coleta
-            plot = plotRepository.findAll().stream()
-                .filter(p -> p.getArea() != null && 
-                            p.getArea().getId().equals(mapping.getCollectionAreaId()))
-                .findFirst()
-                .orElse(null);
+        if (mapping.getPlotId() != null) {
+            plot = plotRepository.findById(mapping.getPlotId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                    "Plot não encontrado com ID: " + mapping.getPlotId()));
         }
         
         int successCount = 0;
