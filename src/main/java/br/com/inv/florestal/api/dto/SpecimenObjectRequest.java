@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -19,4 +20,11 @@ public class SpecimenObjectRequest {
     private BigDecimal latitude;
     private BigDecimal longitude;
     private Long observerId;
+    
+    // SpeciesInfo fields
+    private LocalDateTime observationDate;
+    private BigDecimal heightM;
+    private BigDecimal dbmCm;
+    private Integer ageYears;
+    private Long condition;
 }

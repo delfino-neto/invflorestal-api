@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,9 +28,11 @@ import br.com.inv.florestal.api.dto.ImportResultResponse.ImportError;
 import br.com.inv.florestal.api.models.collection.Plot;
 import br.com.inv.florestal.api.models.species.SpeciesTaxonomy;
 import br.com.inv.florestal.api.models.specimen.SpecimenObject;
+import br.com.inv.florestal.api.models.specimen.SpeciesInfo;
 import br.com.inv.florestal.api.repository.PlotRepository;
 import br.com.inv.florestal.api.repository.SpeciesTaxonomyRepository;
 import br.com.inv.florestal.api.repository.SpecimenObjectRepository;
+import br.com.inv.florestal.api.repository.SpeciesInfoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,6 +44,7 @@ public class DataImportService {
     private final SpecimenObjectRepository specimenRepository;
     private final SpeciesTaxonomyRepository speciesTaxonomyRepository;
     private final PlotRepository plotRepository;
+    private final SpeciesInfoRepository speciesInfoRepository;
 
     @Transactional
     public ImportResultResponse importSpecimens(
@@ -48,6 +54,10 @@ public class DataImportService {
         
         long startTime = System.currentTimeMillis();
         
+        log.info("Iniciando importação de espécimes");
+        log.info("Arquivo: {}, Tamanho: {} bytes", file.getOriginalFilename(), file.getSize());
+        log.info("Mapeamento: {}", mapping);
+        
         String filename = file.getOriginalFilename();
         if (filename == null) {
             throw new IllegalArgumentException("Arquivo sem nome");
@@ -56,15 +66,22 @@ public class DataImportService {
         List<Map<String, String>> rows;
         
         if (filename.endsWith(".csv")) {
+            log.info("Processando arquivo CSV");
             rows = parseCSV(file.getInputStream(), mapping);
         } else if (filename.endsWith(".xlsx") || filename.endsWith(".xls")) {
+            log.info("Processando arquivo Excel");
             rows = parseExcel(file.getInputStream(), mapping);
         } else {
             throw new IllegalArgumentException("Formato de arquivo não suportado. Use CSV ou XLSX");
         }
 
+        log.info("Total de linhas extraídas: {}", rows.size());
+        
         ImportResultResponse result = processSpecimenRows(rows, mapping);
         result.setExecutionTimeMs(System.currentTimeMillis() - startTime);
+        
+        log.info("Importação concluída: {} sucessos, {} erros em {}ms", 
+            result.getSuccessCount(), result.getErrorCount(), result.getExecutionTimeMs());
         
         return result;
     }
@@ -113,34 +130,62 @@ public class DataImportService {
             
             if (mapping.getSheetName() != null && !mapping.getSheetName().isEmpty()) {
                 sheet = workbook.getSheet(mapping.getSheetName());
+                log.info("Tentando abrir planilha: {}", mapping.getSheetName());
+                
+                if (sheet == null) {
+                    log.warn("Planilha '{}' não encontrada. Planilhas disponíveis:", mapping.getSheetName());
+                    for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+                        log.warn("  - {}", workbook.getSheetName(i));
+                    }
+                    // Usa a primeira planilha como fallback
+                    sheet = workbook.getSheetAt(0);
+                    log.info("Usando primeira planilha: {}", sheet.getSheetName());
+                }
             } else {
                 sheet = workbook.getSheetAt(0);
+                log.info("Usando primeira planilha: {}", sheet.getSheetName());
             }
             
             if (sheet == null) {
+                log.error("Nenhuma planilha encontrada no arquivo");
                 return rows;
             }
             
             int startRow = mapping.getStartRow() != null ? mapping.getStartRow() : 1;
+            int lastRowNum = sheet.getLastRowNum();
             
-            for (int i = startRow; i <= sheet.getLastRowNum(); i++) {
+            log.info("Processando planilha '{}' - Linha inicial: {}, Última linha: {}", 
+                sheet.getSheetName(), startRow, lastRowNum);
+            
+            for (int i = startRow; i <= lastRowNum; i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) {
+                    log.debug("Linha {} está vazia, pulando", i);
                     continue;
                 }
                 
                 Map<String, String> rowData = new HashMap<>();
+                boolean hasData = false;
                 
                 // Mapeia valores por índice de coluna
                 for (int j = 0; j < row.getLastCellNum(); j++) {
                     Cell cell = row.getCell(j);
                     String value = cell != null ? getCellValue(cell) : "";
                     rowData.put(String.valueOf(j), value);
+                    
+                    if (!value.isEmpty()) {
+                        hasData = true;
+                    }
                 }
                 
-                rowData.put("_rowNumber", String.valueOf(i + 1));
-                rows.add(rowData);
+                // Só adiciona a linha se tiver algum dado
+                if (hasData) {
+                    rowData.put("_rowNumber", String.valueOf(i + 1));
+                    rows.add(rowData);
+                }
             }
+            
+            log.info("Total de linhas lidas: {}", rows.size());
         }
         
         return rows;
@@ -211,7 +256,20 @@ public class DataImportService {
                 }
                 
                 SpecimenObject specimen = mapRowToSpecimen(row, mapping, plot, species);
-                specimenRepository.save(specimen);
+                specimen = specimenRepository.save(specimen);
+                
+                log.debug("Specimen criado com ID: {}", specimen.getId());
+                
+                // Cria SpeciesInfo se houver dados mapeados
+                SpeciesInfo speciesInfo = mapRowToSpeciesInfo(row, mapping, specimen);
+                if (speciesInfo != null) {
+                    speciesInfo = speciesInfoRepository.save(speciesInfo);
+                    log.info("SpeciesInfo criado com ID: {} para specimen ID: {}", 
+                        speciesInfo.getId(), specimen.getId());
+                } else {
+                    log.debug("Nenhum dado de SpeciesInfo para specimen ID: {}", specimen.getId());
+                }
+                
                 successCount++;
                 
             } catch (Exception e) {
@@ -270,12 +328,92 @@ public class DataImportService {
             switch (field) {
                 case "latitude" -> specimen.setLatitude(parseBigDecimal(value));
                 case "longitude" -> specimen.setLongitude(parseBigDecimal(value));
-                case "scientificName" -> {} // Já processado antes
+                case "scientificName" -> {}
+                // Campos de SpeciesInfo são tratados em mapRowToSpeciesInfo
+                case "heightM", "dbmCm", "ageYears", "condition", "observationDate" -> {}
                 default -> log.warn("Campo desconhecido para mapeamento: {}", field);
             }
         } catch (Exception e) {
             log.warn("Erro ao mapear campo {} com valor {}: {}", field, value, e.getMessage());
         }
+    }
+
+    private SpeciesInfo mapRowToSpeciesInfo(
+        Map<String, String> row,
+        ImportMappingRequest mapping,
+        SpecimenObject specimen
+    ) {
+        Map<Integer, String> columnMapping = mapping.getColumnMapping();
+        boolean hasSpeciesInfoData = false;
+        
+        SpeciesInfo.SpeciesInfoBuilder builder = SpeciesInfo.builder()
+            .object(specimen)
+            .observationDate(LocalDateTime.now()); // Default to now
+        
+        log.debug("Mapeando SpeciesInfo para specimen ID: {}", specimen.getId());
+        
+        for (Map.Entry<Integer, String> entry : columnMapping.entrySet()) {
+            Integer columnIndex = entry.getKey();
+            String targetField = entry.getValue();
+            String value = row.get(String.valueOf(columnIndex));
+            
+            if (value == null || value.isEmpty()) {
+                continue;
+            }
+            
+            log.debug("Campo {} (coluna {}): {}", targetField, columnIndex, value);
+            
+            try {
+                switch (targetField) {
+                    case "heightM" -> {
+                        BigDecimal height = parseBigDecimal(value);
+                        if (height != null) {
+                            builder.heightM(height);
+                            hasSpeciesInfoData = true;
+                            log.debug("heightM mapeado: {}", height);
+                        }
+                    }
+                    case "dbmCm" -> {
+                        BigDecimal dbm = parseBigDecimal(value);
+                        if (dbm != null) {
+                            builder.dbmCm(dbm);
+                            hasSpeciesInfoData = true;
+                            log.debug("dbmCm mapeado: {}", dbm);
+                        }
+                    }
+                    case "ageYears" -> {
+                        Integer age = parseInteger(value);
+                        if (age != null) {
+                            builder.ageYears(age);
+                            hasSpeciesInfoData = true;
+                            log.debug("ageYears mapeado: {}", age);
+                        }
+                    }
+                    case "condition" -> {
+                        Long condition = parseLong(value);
+                        if (condition != null) {
+                            builder.condition(condition);
+                            hasSpeciesInfoData = true;
+                            log.debug("condition mapeado: {}", condition);
+                        }
+                    }
+                    case "observationDate" -> {
+                        LocalDateTime date = parseDateTime(value);
+                        if (date != null) {
+                            builder.observationDate(date);
+                            hasSpeciesInfoData = true;
+                            log.debug("observationDate mapeado: {}", date);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Erro ao mapear campo SpeciesInfo {} com valor {}: {}", targetField, value, e.getMessage());
+            }
+        }
+        
+        log.debug("hasSpeciesInfoData: {}", hasSpeciesInfoData);
+        
+        return hasSpeciesInfoData ? builder.build() : null;
     }
 
     private BigDecimal parseBigDecimal(String value) {
@@ -291,6 +429,60 @@ public class DataImportService {
             log.warn("Não foi possível parsear número: {}", value);
             return null;
         }
+    }
+
+    private Integer parseInteger(String value) {
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            log.warn("Não foi possível parsear inteiro: {}", value);
+            return null;
+        }
+    }
+
+    private Long parseLong(String value) {
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        
+        try {
+            return Long.parseLong(value.trim());
+        } catch (NumberFormatException e) {
+            log.warn("Não foi possível parsear long: {}", value);
+            return null;
+        }
+    }
+
+    private LocalDateTime parseDateTime(String value) {
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        
+        // Tenta vários formatos comuns
+        DateTimeFormatter[] formatters = {
+            DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+            DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"),
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+            DateTimeFormatter.ofPattern("yyyy/MM/dd"),
+            DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        };
+        
+        for (DateTimeFormatter formatter : formatters) {
+            try {
+                return LocalDateTime.parse(value.trim(), formatter);
+            } catch (DateTimeParseException e) {
+                // Tenta próximo formato
+            }
+        }
+        
+        log.warn("Não foi possível parsear data: {}", value);
+        return null;
     }
 
     private SpeciesTaxonomy findOrCreateSpecies(String scientificName, Boolean autoCreate) {

@@ -5,10 +5,12 @@ import br.com.inv.florestal.api.dto.SpecimenObjectRepresentation;
 import br.com.inv.florestal.api.models.collection.Plot;
 import br.com.inv.florestal.api.models.species.SpeciesTaxonomy;
 import br.com.inv.florestal.api.models.specimen.SpecimenObject;
+import br.com.inv.florestal.api.models.specimen.SpeciesInfo;
 import br.com.inv.florestal.api.models.user.User;
 import br.com.inv.florestal.api.repository.MediaRepository;
 import br.com.inv.florestal.api.repository.PlotRepository;
 import br.com.inv.florestal.api.repository.SpecimenObjectRepository;
+import br.com.inv.florestal.api.repository.SpeciesInfoRepository;
 import br.com.inv.florestal.api.repository.SpeciesTaxonomyRepository;
 import br.com.inv.florestal.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import br.com.inv.florestal.api.aspect.Auditable;
 import br.com.inv.florestal.api.models.audit.AuditLog.AuditAction;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -40,6 +43,7 @@ public class SpecimenObjectService {
     private final SpeciesTaxonomyRepository speciesTaxonomyRepository;
     private final UserRepository userRepository;
     private final MediaRepository mediaRepository;
+    private final SpeciesInfoRepository speciesInfoRepository;
 
     @Auditable(action = AuditAction.CREATE, entityName = "SpecimenObject", description = "Novo espécime registrado")
     public SpecimenObjectRepresentation create(SpecimenObjectRequest request) {
@@ -60,7 +64,23 @@ public class SpecimenObjectService {
                 .observer(observer)
                 .build();
         
-        return toRepresentation(specimenObjectRepository.save(specimenObject));
+        specimenObject = specimenObjectRepository.save(specimenObject);
+        
+        // Cria SpeciesInfo se houver dados
+        if (hasSpeciesInfoData(request)) {
+            SpeciesInfo speciesInfo = SpeciesInfo.builder()
+                .object(specimenObject)
+                .observationDate(request.getObservationDate() != null ? request.getObservationDate() : LocalDateTime.now())
+                .heightM(request.getHeightM())
+                .dbmCm(request.getDbmCm())
+                .ageYears(request.getAgeYears())
+                .condition(request.getCondition())
+                .build();
+            
+            speciesInfoRepository.save(speciesInfo);
+        }
+        
+        return toRepresentation(specimenObject);
     }
 
     public Page<SpecimenObjectRepresentation> search(Integer page, Integer size) {
@@ -106,20 +126,28 @@ public class SpecimenObjectService {
         specimenObjectRepository.deleteById(id);
     }
 
+    private boolean hasSpeciesInfoData(SpecimenObjectRequest request) {
+        return request.getHeightM() != null 
+            || request.getDbmCm() != null 
+            || request.getAgeYears() != null 
+            || request.getCondition() != null
+            || request.getObservationDate() != null;
+    }
+
     private SpecimenObjectRepresentation toRepresentation(SpecimenObject specimenObject) {
         return SpecimenObjectRepresentation.builder()
                 .id(specimenObject.getId())
-                .plotId(specimenObject.getPlot().getId())
-                .plotCode(specimenObject.getPlot().getPlotCode())
-                .areaId(specimenObject.getPlot().getArea() != null ? specimenObject.getPlot().getArea().getId() : null)
-                .areaName(specimenObject.getPlot().getArea() != null ? specimenObject.getPlot().getArea().getName() : null)
-                .speciesId(specimenObject.getSpecies().getId())
-                .speciesScientificName(specimenObject.getSpecies().getScientificName())
-                .speciesCommonName(specimenObject.getSpecies().getCommonName())
+                .plotId(specimenObject.getPlot() != null ? specimenObject.getPlot().getId() : null)
+                .plotCode(specimenObject.getPlot() != null ? specimenObject.getPlot().getPlotCode() : null)
+                .areaId(specimenObject.getPlot() != null && specimenObject.getPlot().getArea() != null ? specimenObject.getPlot().getArea().getId() : null)
+                .areaName(specimenObject.getPlot() != null && specimenObject.getPlot().getArea() != null ? specimenObject.getPlot().getArea().getName() : null)
+                .speciesId(specimenObject.getSpecies() != null ? specimenObject.getSpecies().getId() : null)
+                .speciesScientificName(specimenObject.getSpecies() != null ? specimenObject.getSpecies().getScientificName() : null)
+                .speciesCommonName(specimenObject.getSpecies() != null ? specimenObject.getSpecies().getCommonName() : null)
                 .latitude(specimenObject.getLatitude())
                 .longitude(specimenObject.getLongitude())
-                .observerId(specimenObject.getObserver().getId())
-                .observerFullName(specimenObject.getObserver().fullName())
+                .observerId(specimenObject.getObserver() != null ? specimenObject.getObserver().getId() : null)
+                .observerFullName(specimenObject.getObserver() != null ? specimenObject.getObserver().fullName() : null)
                 .imageUrls(getSpecimenImages(specimenObject.getId()))
                 .createdAt(specimenObject.getCreatedAt())
                 .updatedAt(specimenObject.getUpdatedAt())
