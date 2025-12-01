@@ -146,11 +146,6 @@ public class DataImportService {
                 log.info("Usando primeira planilha: {}", sheet.getSheetName());
             }
             
-            if (sheet == null) {
-                log.error("Nenhuma planilha encontrada no arquivo");
-                return rows;
-            }
-            
             int startRow = mapping.getStartRow() != null ? mapping.getStartRow() : 1;
             int lastRowNum = sheet.getLastRowNum();
             
@@ -486,11 +481,17 @@ public class DataImportService {
     }
 
     private SpeciesTaxonomy findOrCreateSpecies(String scientificName, Boolean autoCreate) {
-        // Busca espécie existente por nome científico
-        SpeciesTaxonomy species = speciesTaxonomyRepository.findAll().stream()
-            .filter(s -> scientificName.equalsIgnoreCase(s.getScientificName()))
-            .findFirst()
-            .orElse(null);
+        // Busca espécie existente por nome científico, nome comum, família ou gênero
+        List<SpeciesTaxonomy> matchingSpecies = speciesTaxonomyRepository.findByAnyName(scientificName);
+        
+        SpeciesTaxonomy species = null;
+        if (!matchingSpecies.isEmpty()) {
+            // Prioriza correspondência exata no nome científico
+            species = matchingSpecies.stream()
+                .filter(s -> scientificName.equalsIgnoreCase(s.getScientificName()))
+                .findFirst()
+                .orElse(matchingSpecies.get(0)); // Caso contrário, usa a primeira correspondência
+        }
         
         if (species == null && Boolean.TRUE.equals(autoCreate)) {
             // Cria nova espécie

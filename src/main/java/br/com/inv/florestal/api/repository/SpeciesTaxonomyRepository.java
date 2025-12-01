@@ -37,4 +37,13 @@ public interface SpeciesTaxonomyRepository extends JpaRepository<SpeciesTaxonomy
         @Param("genus") String genus,
         Pageable pageable
     );
+    
+    @Query("""
+        SELECT s FROM SpeciesTaxonomy s WHERE
+            LOWER(s.scientificName) = LOWER(:name) OR
+            LOWER(s.commonName) = LOWER(:name) OR
+            LOWER(s.family) = LOWER(:name) OR
+            LOWER(s.genus) = LOWER(:name)
+    """)
+    List<SpeciesTaxonomy> findByAnyName(@Param("name") String name);
 }
