@@ -33,4 +33,16 @@ public interface SpecimenObjectRepository extends JpaRepository<SpecimenObject, 
         ORDER BY s.createdAt DESC
     """)
     List<Object[]> findRecentActivities();
+    
+    @Query("""
+        SELECT s FROM SpecimenObject s WHERE
+            (:speciesId IS NULL OR s.species.id = :speciesId) AND
+            (:areaId IS NULL OR s.plot.area.id = :areaId) AND
+            (:observerId IS NULL OR s.observer.id = :observerId)
+    """)
+    List<SpecimenObject> findWithFilters(
+        @Param("speciesId") Long speciesId,
+        @Param("areaId") Long areaId,
+        @Param("observerId") Long observerId
+    );
 }

@@ -97,6 +97,12 @@ public class SpecimenObjectService {
                 .map(this::toRepresentation)
                 .collect(Collectors.toList());
     }
+    
+    public List<SpecimenObjectRepresentation> findWithFilters(Long speciesId, Long areaId, Long observerId) {
+        return specimenObjectRepository.findWithFilters(speciesId, areaId, observerId).stream()
+                .map(this::toRepresentation)
+                .collect(Collectors.toList());
+    }
 
     @Auditable(action = AuditAction.UPDATE, entityName = "SpecimenObject", description = "Espécime atualizado")
     public SpecimenObjectRepresentation update(Long id, SpecimenObjectRequest request) {

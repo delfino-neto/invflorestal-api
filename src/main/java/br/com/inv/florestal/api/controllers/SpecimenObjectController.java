@@ -40,6 +40,15 @@ public class SpecimenObjectController {
     public ResponseEntity<java.util.List<SpecimenObjectRepresentation>> findByCollectionAreaId(@PathVariable Long areaId) {
         return ResponseEntity.ok(specimenObjectService.findByCollectionAreaId(areaId));
     }
+    
+    @GetMapping("/filter")
+    public ResponseEntity<java.util.List<SpecimenObjectRepresentation>> findWithFilters(
+            @RequestParam(required = false) Long speciesId,
+            @RequestParam(required = false) Long areaId,
+            @RequestParam(required = false) Long observerId
+    ) {
+        return ResponseEntity.ok(specimenObjectService.findWithFilters(speciesId, areaId, observerId));
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<SpecimenObjectRepresentation> update(
