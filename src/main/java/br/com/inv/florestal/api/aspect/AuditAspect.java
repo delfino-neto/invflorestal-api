@@ -30,8 +30,9 @@ public class AuditAspect {
         Object result = null;
         
         try {
-            // Para UPDATE, captura o valor antigo antes de executar o método
-            if (auditable.action() == br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.UPDATE) {
+            // Para UPDATE e DELETE, captura o valor antigo antes de executar o método
+            if (auditable.action() == br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.UPDATE ||
+                auditable.action() == br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.DELETE) {
                 String entityId = extractEntityId(args, null, auditable.action());
                 if (!entityId.equals("unknown")) {
                     try {
@@ -48,7 +49,7 @@ public class AuditAspect {
                             oldValue = findResult;
                         }
                     } catch (Exception e) {
-                        log.debug("Could not fetch old value for UPDATE audit", e);
+                        log.debug("Could not fetch old value for {} audit", auditable.action(), e);
                     }
                 }
             }
@@ -76,7 +77,11 @@ public class AuditAspect {
                     newValue = result; // Valor atualizado (oldValue já foi capturado antes)
                     break;
                 case DELETE:
-                    oldValue = result; // Para DELETE, o resultado pode ser o objeto deletado
+                    // Para DELETE, oldValue já foi capturado antes
+                    // Se o método retornar algo, pode ser usado como confirmação
+                    if (result != null) {
+                        oldValue = result;
+                    }
                     break;
                 default:
                     // Para outras ações, registra apenas o resultado

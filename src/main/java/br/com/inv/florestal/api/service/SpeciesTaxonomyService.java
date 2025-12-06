@@ -1,7 +1,9 @@
 package br.com.inv.florestal.api.service;
 
+import br.com.inv.florestal.api.aspect.Auditable;
 import br.com.inv.florestal.api.dto.SpeciesTaxonomyRequest;
 import br.com.inv.florestal.api.dto.SpeciesTaxonomyRepresentation;
+import br.com.inv.florestal.api.models.audit.AuditLog.AuditAction;
 import br.com.inv.florestal.api.models.species.SpeciesTaxonomy;
 import br.com.inv.florestal.api.repository.SpeciesTaxonomyRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ public class SpeciesTaxonomyService {
 
     private final SpeciesTaxonomyRepository speciesTaxonomyRepository;
 
+    @Auditable(action = AuditAction.CREATE, entityName = "SpeciesTaxonomy", description = "Nova taxonomia criada")
     public SpeciesTaxonomyRepresentation create(SpeciesTaxonomyRequest request) {
         SpeciesTaxonomy speciesTaxonomy = SpeciesTaxonomy.builder()
                 .scientificName(request.getScientificName())
@@ -50,6 +53,7 @@ public class SpeciesTaxonomyService {
         return speciesTaxonomyRepository.findById(id).map(this::toRepresentation);
     }
 
+    @Auditable(action = AuditAction.UPDATE, entityName = "SpeciesTaxonomy", description = "Taxonomia atualizada")
     public SpeciesTaxonomyRepresentation update(Long id, SpeciesTaxonomyRequest request) {
         SpeciesTaxonomy speciesTaxonomy = speciesTaxonomyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Species Taxonomy not found"));
@@ -63,8 +67,13 @@ public class SpeciesTaxonomyService {
         return toRepresentation(speciesTaxonomyRepository.save(speciesTaxonomy));
     }
 
-    public void delete(Long id) {
+    @Auditable(action = AuditAction.DELETE, entityName = "SpeciesTaxonomy", description = "Taxonomia excluída")
+    public SpeciesTaxonomyRepresentation delete(Long id) {
+        SpeciesTaxonomy speciesTaxonomy = speciesTaxonomyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Species Taxonomy not found"));
+        SpeciesTaxonomyRepresentation representation = toRepresentation(speciesTaxonomy);
         speciesTaxonomyRepository.deleteById(id);
+        return representation;
     }
 
     private SpeciesTaxonomyRepresentation toRepresentation(SpeciesTaxonomy speciesTaxonomy) {
