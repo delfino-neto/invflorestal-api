@@ -15,6 +15,9 @@ public interface SpecimenObjectRepository extends JpaRepository<SpecimenObject, 
     @Query("SELECT s FROM SpecimenObject s WHERE s.plot.area.id = :areaId")
     List<SpecimenObject> findByCollectionAreaId(@Param("areaId") Long areaId);
     
+    @Query("SELECT s FROM SpecimenObject s WHERE s.plot.id = :plotId")
+    List<SpecimenObject> findByPlotId(@Param("plotId") Long plotId);
+    
     @Query("SELECT COUNT(s) FROM SpecimenObject s WHERE s.createdAt >= :since")
     Long countRecentSpecimens(@Param("since") LocalDateTime since);
     
