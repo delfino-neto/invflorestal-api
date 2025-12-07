@@ -54,8 +54,8 @@ public class User implements UserDetails, Principal {
 
     private String password;
 
-    private boolean accountLocked;
-    private boolean enabled;
+    private Boolean accountLocked;
+    private Boolean enabled;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -104,7 +104,7 @@ public class User implements UserDetails, Principal {
 
     @Override
     public boolean isAccountNonLocked() {
-        return !accountLocked;
+        return accountLocked == null || !accountLocked;
     }
 
     @Override
@@ -114,7 +114,7 @@ public class User implements UserDetails, Principal {
 
     @Override
     public boolean isEnabled() {
-        return enabled;
+        return enabled != null && enabled;
     }
 
     public String fullName(){

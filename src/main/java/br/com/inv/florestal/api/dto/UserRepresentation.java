@@ -32,7 +32,7 @@ public class UserRepresentation {
         this.email = user.getEmail();
         this.dateOfBirth = user.getDateOfBirth();
         this.enabled = user.isEnabled();
-        this.accountLocked = user.isAccountLocked();
+        this.accountLocked = user.getAccountLocked();
         this.roles = user.getRoles().stream().map(role -> role.getName()).toList();
         this.createdAt = user.getCreatedAt();
         this.updatedAt = user.getUpdateAt();

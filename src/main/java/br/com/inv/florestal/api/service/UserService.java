@@ -133,7 +133,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
-        user.setAccountLocked(!user.isAccountLocked());
+        user.setAccountLocked(!user.getAccountLocked());
         user = userRepository.save(user);
         return new UserRepresentation(user);
     }
