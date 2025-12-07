@@ -49,6 +49,11 @@ public class SpecimenObjectService {
 
     @Auditable(action = AuditAction.CREATE, entityName = "SpecimenObject", description = "Novo espécime registrado")
     public SpecimenObjectRepresentation create(SpecimenObjectRequest request) {
+        System.out.println("🔵 [SpecimenObjectService] create() chamado:");
+        System.out.println("   plotId: " + request.getPlotId());
+        System.out.println("   speciesId: " + request.getSpeciesId());
+        System.out.println("   observerId: " + request.getObserverId());
+        
         Plot plot = plotRepository.findById(request.getPlotId())
                 .orElseThrow(() -> new RuntimeException("Plot not found"));
 
@@ -59,13 +64,17 @@ public class SpecimenObjectService {
         User observer;
         if (request.getObserverId() != null) {
             // Se veio no request, usa ele
+            System.out.println("   ✅ observerId veio no request, buscando usuário...");
             observer = userRepository.findById(request.getObserverId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
+            System.out.println("   Observer encontrado: " + observer.getFullName() + " (ID: " + observer.getId() + ")");
         } else {
             // Se não veio, pega do contexto de segurança (usuário autenticado)
+            System.out.println("   ⚠️  observerId NÃO veio no request, usando contexto de segurança...");
             UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             observer = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+            System.out.println("   Observer do contexto: " + observer.getFullName() + " (ID: " + observer.getId() + ")");
         }
 
         SpecimenObject specimenObject = SpecimenObject.builder()
@@ -77,6 +86,7 @@ public class SpecimenObjectService {
                 .build();
         
         specimenObject = specimenObjectRepository.save(specimenObject);
+        System.out.println("   ✅ Espécime salvo com ID: " + specimenObject.getId() + " (observer: " + specimenObject.getObserver().getId() + ")");
         
         // Cria SpeciesInfo se houver dados
         if (hasSpeciesInfoData(request)) {
@@ -117,7 +127,23 @@ public class SpecimenObjectService {
     }
     
     public List<SpecimenObjectRepresentation> findByPlotIdAndObserverId(Long plotId, Long observerId) {
-        return specimenObjectRepository.findByPlotIdAndObserverId(plotId, observerId).stream()
+        System.out.println("🔵 [SpecimenObjectService] findByPlotIdAndObserverId() chamado:");
+        System.out.println("   plotId: " + plotId);
+        System.out.println("   observerId: " + observerId);
+        
+        List<SpecimenObject> specimens = specimenObjectRepository.findByPlotIdAndObserverId(plotId, observerId);
+        System.out.println("   ✅ Encontrados: " + specimens.size() + " espécimes");
+        
+        if (specimens.isEmpty()) {
+            System.out.println("   ⚠️  Nenhum espécime encontrado! Verificando todos do plot...");
+            List<SpecimenObject> allInPlot = specimenObjectRepository.findByPlotId(plotId);
+            System.out.println("   Total de espécimes no plot: " + allInPlot.size());
+            for (SpecimenObject s : allInPlot) {
+                System.out.println("      - Espécime ID: " + s.getId() + ", Observer ID: " + s.getObserver().getId());
+            }
+        }
+        
+        return specimens.stream()
                 .map(this::toRepresentation)
                 .collect(Collectors.toList());
     }
