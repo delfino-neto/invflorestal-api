@@ -16,6 +16,8 @@ import br.com.inv.florestal.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import br.com.inv.florestal.api.aspect.Auditable;
@@ -53,8 +55,18 @@ public class SpecimenObjectService {
         SpeciesTaxonomy species = speciesTaxonomyRepository.findById(request.getSpeciesId())
                 .orElseThrow(() -> new RuntimeException("Species not found"));
 
-        User observer = userRepository.findById(request.getObserverId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        // Busca o usuário autenticado do contexto de segurança
+        User observer;
+        if (request.getObserverId() != null) {
+            // Se veio no request, usa ele
+            observer = userRepository.findById(request.getObserverId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+        } else {
+            // Se não veio, pega do contexto de segurança (usuário autenticado)
+            UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            observer = userRepository.findByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+        }
 
         SpecimenObject specimenObject = SpecimenObject.builder()
                 .plot(plot)
