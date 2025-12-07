@@ -104,6 +104,12 @@ public class SpecimenObjectService {
                 .collect(Collectors.toList());
     }
     
+    public List<SpecimenObjectRepresentation> findByPlotIdAndObserverId(Long plotId, Long observerId) {
+        return specimenObjectRepository.findByPlotIdAndObserverId(plotId, observerId).stream()
+                .map(this::toRepresentation)
+                .collect(Collectors.toList());
+    }
+    
     public List<SpecimenObjectRepresentation> findWithFilters(Long speciesId, Long areaId, Long observerId) {
         return specimenObjectRepository.findWithFilters(speciesId, areaId, observerId).stream()
                 .map(this::toRepresentation)

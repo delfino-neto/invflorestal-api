@@ -46,6 +46,14 @@ public class SpecimenObjectController {
         return ResponseEntity.ok(specimenObjectService.findByPlotId(plotId));
     }
     
+    @GetMapping("/by-plot/{plotId}/my-specimens")
+    public ResponseEntity<java.util.List<SpecimenObjectRepresentation>> findMySpecimensByPlot(
+            @PathVariable Long plotId,
+            @RequestParam Long observerId
+    ) {
+        return ResponseEntity.ok(specimenObjectService.findByPlotIdAndObserverId(plotId, observerId));
+    }
+    
     @GetMapping("/filter")
     public ResponseEntity<java.util.List<SpecimenObjectRepresentation>> findWithFilters(
             @RequestParam(required = false) Long speciesId,
