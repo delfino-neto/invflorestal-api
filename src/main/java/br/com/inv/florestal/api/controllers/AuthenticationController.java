@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.inv.florestal.api.dto.AuthenticationRequest;
 import br.com.inv.florestal.api.dto.AuthenticationResponse;
+import br.com.inv.florestal.api.dto.RefreshTokenRequest;
 import br.com.inv.florestal.api.dto.RegistrationRequest;
 import br.com.inv.florestal.api.models.user.User;
 import br.com.inv.florestal.api.repository.UserRepository;
@@ -92,6 +93,19 @@ public class AuthenticationController {
         cookie.setMaxAge(0);
         response.addCookie(cookie);
         return ResponseEntity.ok().body(Map.of("message", "Logout realizado com sucesso"));
+    }
+    
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthenticationResponse> refreshToken(
+        @RequestBody @Valid RefreshTokenRequest request
+    ) {
+        try {
+            AuthenticationResponse response = service.refreshToken(request.getRefreshToken());
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(null);
+        }
     }
     
 }

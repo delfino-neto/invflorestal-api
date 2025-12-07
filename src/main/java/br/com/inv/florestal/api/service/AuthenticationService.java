@@ -14,6 +14,7 @@ import br.com.inv.florestal.api.aspect.Auditable;
 import br.com.inv.florestal.api.dto.AuthenticationRequest;
 import br.com.inv.florestal.api.dto.AuthenticationResponse;
 import br.com.inv.florestal.api.dto.RegistrationRequest;
+import br.com.inv.florestal.api.models.user.RefreshToken;
 import br.com.inv.florestal.api.models.user.Role;
 import br.com.inv.florestal.api.models.user.User;
 import br.com.inv.florestal.api.repository.RoleRepository;
@@ -26,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthenticationService {
 
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
     
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -67,7 +69,32 @@ public class AuthenticationService {
         userRepository.save(user);
 
         String token = jwtService.generateToken(claims, user);
-        return AuthenticationResponse.builder().token(token).build();
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getEmail());
+        
+        return AuthenticationResponse.builder()
+                .token(token)
+                .refreshToken(refreshToken.getToken())
+                .build();
+    }
+
+    public AuthenticationResponse refreshToken(String refreshTokenStr) {
+        return refreshTokenService.findByToken(refreshTokenStr)
+                .map(refreshTokenService::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(user -> {
+                    HashMap<String, Object> claims = new HashMap<>();
+                    claims.put("fullName", user.fullName());
+                    String newToken = jwtService.generateToken(claims, user);
+                    
+                    // Opcionalmente, gera um novo refresh token (token rotation)
+                    RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getEmail());
+                    
+                    return AuthenticationResponse.builder()
+                            .token(newToken)
+                            .refreshToken(newRefreshToken.getToken())
+                            .build();
+                })
+                .orElseThrow(() -> new RuntimeException("Refresh token inválido"));
     }
 
 }

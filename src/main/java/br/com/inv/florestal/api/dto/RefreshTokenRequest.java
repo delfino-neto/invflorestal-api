@@ -1,15 +1,14 @@
 package br.com.inv.florestal.api.dto;
 
-import lombok.Builder;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Builder
-public class AuthenticationResponse {
+public class RefreshTokenRequest {
     
-    private String token;
+    @NotBlank(message = "Refresh token é obrigatório")
     private String refreshToken;
     
 }
