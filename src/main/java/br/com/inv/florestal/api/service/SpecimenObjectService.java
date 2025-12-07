@@ -67,14 +67,14 @@ public class SpecimenObjectService {
             System.out.println("   ✅ observerId veio no request, buscando usuário...");
             observer = userRepository.findById(request.getObserverId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            System.out.println("   Observer encontrado: " + observer.getFullName() + " (ID: " + observer.getId() + ")");
+            System.out.println("   Observer encontrado: " + observer.getName() + " (ID: " + observer.getId() + ")");
         } else {
             // Se não veio, pega do contexto de segurança (usuário autenticado)
             System.out.println("   ⚠️  observerId NÃO veio no request, usando contexto de segurança...");
             UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             observer = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
-            System.out.println("   Observer do contexto: " + observer.getFullName() + " (ID: " + observer.getId() + ")");
+            System.out.println("   Observer do contexto: " + observer.getName() + " (ID: " + observer.getId() + ")");
         }
 
         SpecimenObject specimenObject = SpecimenObject.builder()
