@@ -51,8 +51,6 @@ public class AuthenticationController {
         User user = userRepository.findByEmail(userDetails.getUsername())
         .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
 
-        System.out.println("🔵 /auth/me - Retornando usuário ID: " + user.getId() + " - " + user.fullName());
-
         Map<String, Object> response = Map.of(
             "id", user.getId(),
             "email", userDetails.getUsername(),

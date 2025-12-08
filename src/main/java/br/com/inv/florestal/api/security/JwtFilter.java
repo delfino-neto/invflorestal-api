@@ -33,7 +33,12 @@ public class JwtFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String path = request.getServletPath();
-        if (path.contains("/api/v1/auth") || path.startsWith("/uploads/")) {
+        // Skip JWT processing only for public auth endpoints
+        if (path.equals("/api/v1/auth/register") || 
+            path.equals("/api/v1/auth/authenticate") || 
+            path.equals("/api/v1/auth/refresh") || 
+            path.equals("/api/v1/auth/logout") ||
+            path.startsWith("/uploads/")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -41,7 +46,14 @@ public class JwtFilter extends OncePerRequestFilter {
         String jwt = null;
         String userEmail = null;
 
-        if (request.getCookies() != null) {
+        // Tenta buscar o token do header Authorization primeiro (para mobile)
+        final String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+        }
+
+        // Se não encontrou no header, busca nos cookies (para web)
+        if (jwt == null && request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("auth-token-jwt".equals(cookie.getName())) {
                     jwt = cookie.getValue();

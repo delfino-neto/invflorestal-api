@@ -65,7 +65,6 @@ public class CollectionAreaService {
     }
 
     public Page<CollectionAreaRepresentation> search(Integer page, Integer size, String searchTerm) {
-        System.out.println("SEARCH TERM: " + searchTerm);
         return collectionAreaRepository.search(
                 searchTerm,
                 PageRequest.of(page, size)
