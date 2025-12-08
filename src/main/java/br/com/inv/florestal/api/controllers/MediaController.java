@@ -27,10 +27,14 @@ public class MediaController {
             @PathVariable Long objectId,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "description", required = false) String description,
-            @RequestParam(value = "uploadedById", required = false) Long uploadedById
+            @RequestParam(value = "uploadedById", required = false) Long uploadedById,
+            @RequestParam(value = "latitude", required = false) Double latitude,
+            @RequestParam(value = "longitude", required = false) Double longitude,
+            @RequestParam(value = "timestamp", required = false) Long timestamp
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(mediaService.uploadImage(objectId, file, description, uploadedById));
+                .body(mediaService.uploadImage(objectId, file, description, uploadedById, 
+                    latitude, longitude, timestamp));
     }
 
     @GetMapping

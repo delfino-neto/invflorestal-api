@@ -17,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Path;
 import java.util.Optional;
 
 @Service
@@ -27,6 +28,7 @@ public class MediaService {
     private final SpecimenObjectRepository specimenObjectRepository;
     private final UserRepository userRepository;
     private final StorageService storageService;
+    private final ExifMetadataService exifMetadataService;
 
     public MediaRepresentation create(MediaRequest request) {
         SpecimenObject specimenObject = specimenObjectRepository.findById(request.getObjectId())
@@ -46,7 +48,14 @@ public class MediaService {
         return toRepresentation(mediaRepository.save(media));
     }
 
-    public MediaRepresentation uploadImage(Long objectId, MultipartFile file, String description, Long uploadedById) {
+    public MediaRepresentation uploadImage(Long objectId, MultipartFile file, String description, 
+                                          Long uploadedById, Double latitude, Double longitude, Long timestamp) {
+        System.out.println("📸 [MediaService] Upload iniciado:");
+        System.out.println("   Arquivo: " + file.getOriginalFilename());
+        System.out.println("   Latitude: " + latitude);
+        System.out.println("   Longitude: " + longitude);
+        System.out.println("   Timestamp: " + timestamp);
+        
         if (file.isEmpty()) {
             throw new RuntimeException("File is empty");
         }
@@ -77,6 +86,23 @@ public class MediaService {
 
         try {
             String filename = storageService.store(file);
+            
+            // Adiciona metadados EXIF se houver GPS ou timestamp
+            if (latitude != null || longitude != null || timestamp != null) {
+                try {
+                    Path uploadPath = storageService.load(filename);
+                    exifMetadataService.addExifMetadata(
+                        uploadPath.toString(), 
+                        latitude, 
+                        longitude, 
+                        timestamp
+                    );
+                    System.out.println("✅ Metadados EXIF adicionados à imagem: " + filename);
+                } catch (Exception e) {
+                    System.err.println("⚠️ Falha ao adicionar metadados EXIF: " + e.getMessage());
+                    // Não falha o upload se o EXIF não puder ser adicionado
+                }
+            }
 
             Media media = Media.builder()
                     .object(specimenObject)

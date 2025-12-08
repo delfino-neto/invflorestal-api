@@ -98,6 +98,20 @@
 			<version>5.2.5</version>
 		</dependency>
 
+		<!-- Metadata Extractor for reading/writing EXIF data -->
+		<dependency>
+			<groupId>com.drewnoakes</groupId>
+			<artifactId>metadata-extractor</artifactId>
+			<version>2.19.0</version>
+		</dependency>
+
+		<!-- Apache Commons Imaging for writing EXIF data -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-imaging</artifactId>
+			<version>1.0-alpha3</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
