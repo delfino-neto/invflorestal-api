@@ -3,10 +3,16 @@ package br.com.inv.florestal.api.storage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -92,6 +98,39 @@ public class FileSystemStorageService implements StorageService {
             }
         } catch (MalformedURLException e) {
             throw new StorageFileNotFoundException("Could not read file: " + filename, e);
+        }
+    }
+
+    @Override
+    public Resource loadThumbnail(String filename, int width, int quality) {
+        try {
+            Path file = load(filename);
+            BufferedImage originalImage = ImageIO.read(file.toFile());
+            
+            if (originalImage == null) {
+                throw new StorageException("Could not read image file: " + filename);
+            }
+
+            // Calcular altura mantendo aspect ratio
+            int originalWidth = originalImage.getWidth();
+            int originalHeight = originalImage.getHeight();
+            int height = (int) ((double) originalHeight / originalWidth * width);
+
+            // Criar thumbnail
+            Image scaledImage = originalImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            BufferedImage thumbnail = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2d = thumbnail.createGraphics();
+            g2d.drawImage(scaledImage, 0, 0, null);
+            g2d.dispose();
+
+            // Converter para byte array
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(thumbnail, "jpg", baos);
+            byte[] thumbnailBytes = baos.toByteArray();
+
+            return new ByteArrayResource(thumbnailBytes);
+        } catch (IOException e) {
+            throw new StorageException("Failed to generate thumbnail for: " + filename, e);
         }
     }
 

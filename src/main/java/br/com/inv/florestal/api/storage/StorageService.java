@@ -18,5 +18,7 @@ public interface StorageService {
 
     Resource loadAsResource(String filename);
 
+    Resource loadThumbnail(String filename, int width, int quality);
+
     void delete(String filename);
 }

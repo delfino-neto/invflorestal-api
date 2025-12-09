@@ -37,6 +37,26 @@ public class MediaFileController {
         }
     }
 
+    @GetMapping("/thumbnail/{filename:.+}")
+    public ResponseEntity<Resource> serveThumbnail(
+            @PathVariable String filename,
+            @RequestParam(value = "width", defaultValue = "200") Integer width,
+            @RequestParam(value = "quality", defaultValue = "70") Integer quality
+    ) {
+        try {
+            Resource thumbnail = storageService.loadThumbnail(filename, width, quality);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"thumb_" + filename + "\"")
+                    .body(thumbnail);
+        } catch (StorageFileNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Error generating thumbnail for: {}", filename, e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @ExceptionHandler(StorageFileNotFoundException.class)
     public ResponseEntity<?> handleStorageFileNotFound(StorageFileNotFoundException exc) {
         return ResponseEntity.notFound().build();
