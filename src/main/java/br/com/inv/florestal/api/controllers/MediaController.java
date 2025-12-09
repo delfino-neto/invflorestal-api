@@ -74,4 +74,10 @@ public class MediaController {
         mediaService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/by-url")
+    public ResponseEntity<Void> deleteByUrl(@RequestParam String url) {
+        mediaService.deleteByUrl(url);
+        return ResponseEntity.noContent().build();
+    }
 }

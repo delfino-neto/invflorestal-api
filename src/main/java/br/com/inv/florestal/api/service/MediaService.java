@@ -155,6 +155,15 @@ public class MediaService {
         Media media = mediaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Media not found"));
 
+        // Validar se o usuário atual é o dono do specimen
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(authentication.getName())
+        .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!media.getObject().getObserver().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Você não tem permissão para excluir esta mídia");
+        }
+
         try {
             String url = media.getUrl();
             if (url != null && url.startsWith("/uploads/media/")) {
@@ -166,6 +175,30 @@ public class MediaService {
         }
 
         mediaRepository.deleteById(id);
+    }
+
+    public void deleteByUrl(String url) {
+        Media media = mediaRepository.findByUrl(url)
+                .orElseThrow(() -> new RuntimeException("Media not found"));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByEmail(authentication.getName())
+        .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!media.getObject().getObserver().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Você não tem permissão para excluir esta mídia");
+        }
+
+        try {
+            if (url != null && url.startsWith("/uploads/media/")) {
+                String filename = url.substring(url.lastIndexOf("/") + 1);
+                storageService.delete(filename);
+            }
+        } catch (Exception e) {
+            // Ignore file deletion errors
+        }
+
+        mediaRepository.deleteById(media.getId());
     }
 
     private MediaRepresentation toRepresentation(Media media) {
