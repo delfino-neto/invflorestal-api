@@ -16,6 +16,7 @@ import br.com.inv.florestal.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -144,6 +145,17 @@ public class SpecimenObjectService {
         SpecimenObject specimenObject = specimenObjectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Specimen Object not found"));
 
+        // Validar se o usuário autenticado é o observador do espécime
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof User) {
+            User currentUser = (User) authentication.getPrincipal();
+            if (!specimenObject.getObserver().getId().equals(currentUser.getId())) {
+                throw new RuntimeException("Você não tem permissão para editar este espécime");
+            }
+        } else {
+            throw new RuntimeException("Usuário não autenticado");
+        }
+
         Plot plot = plotRepository.findById(request.getPlotId())
                 .orElseThrow(() -> new RuntimeException("Plot not found"));
 
@@ -164,6 +176,19 @@ public class SpecimenObjectService {
 
     @Auditable(action = AuditAction.DELETE, entityName = "SpecimenObject", description = "Espécime excluído")
     public void delete(Long id) {
+        SpecimenObject specimenObject = specimenObjectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Specimen Object not found"));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof User) {
+            User currentUser = (User) authentication.getPrincipal();
+            if (!specimenObject.getObserver().getId().equals(currentUser.getId())) {
+                throw new RuntimeException("Você não tem permissão para excluir este espécime");
+            }
+        } else {
+            throw new RuntimeException("Usuário não autenticado");
+        }
+
         specimenObjectRepository.deleteById(id);
     }
 
