@@ -50,32 +50,21 @@ public class SpecimenObjectService {
 
     @Auditable(action = AuditAction.CREATE, entityName = "SpecimenObject", description = "Novo espécime registrado")
     public SpecimenObjectRepresentation create(SpecimenObjectRequest request) {
-        System.out.println("🔵 [SpecimenObjectService] create() chamado:");
-        System.out.println("   plotId: " + request.getPlotId());
-        System.out.println("   speciesId: " + request.getSpeciesId());
-        System.out.println("   observerId: " + request.getObserverId());
-        
         Plot plot = plotRepository.findById(request.getPlotId())
                 .orElseThrow(() -> new RuntimeException("Plot not found"));
 
         SpeciesTaxonomy species = speciesTaxonomyRepository.findById(request.getSpeciesId())
                 .orElseThrow(() -> new RuntimeException("Species not found"));
 
-        // Busca o usuário autenticado do contexto de segurança
         User observer;
         if (request.getObserverId() != null) {
-            // Se veio no request, usa ele
-            System.out.println("   ✅ observerId veio no request, buscando usuário...");
             observer = userRepository.findById(request.getObserverId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
             System.out.println("   Observer encontrado: " + observer.getName() + " (ID: " + observer.getId() + ")");
         } else {
-            // Se não veio, pega do contexto de segurança (usuário autenticado)
-            System.out.println("   ⚠️  observerId NÃO veio no request, usando contexto de segurança...");
             UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             observer = userRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
-            System.out.println("   Observer do contexto: " + observer.getName() + " (ID: " + observer.getId() + ")");
         }
 
         SpecimenObject specimenObject = SpecimenObject.builder()
@@ -88,7 +77,6 @@ public class SpecimenObjectService {
         
         specimenObject = specimenObjectRepository.save(specimenObject);
         
-        // Cria SpeciesInfo se houver dados
         if (hasSpeciesInfoData(request)) {
             SpeciesInfo speciesInfo = SpeciesInfo.builder()
                 .object(specimenObject)
@@ -145,7 +133,6 @@ public class SpecimenObjectService {
         SpecimenObject specimenObject = specimenObjectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Specimen Object not found"));
 
-        // Validar se o usuário autenticado é o observador do espécime
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof User) {
             User currentUser = (User) authentication.getPrincipal();

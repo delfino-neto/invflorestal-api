@@ -100,13 +100,12 @@ public class DataImportService {
                 rowNumber++;
                 
                 if (rowNumber <= startRow) {
-                    continue; // Pula headers e linhas antes do startRow
+                    continue;
                 }
                 
                 String[] values = line.split("\t", -1);
                 Map<String, String> row = new HashMap<>();
                 
-                // Mapeia valores por índice de coluna
                 for (int i = 0; i < values.length; i++) {
                     String value = values[i].trim();
                     row.put(String.valueOf(i), value);
@@ -137,7 +136,6 @@ public class DataImportService {
                     for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
                         log.warn("  - {}", workbook.getSheetName(i));
                     }
-                    // Usa a primeira planilha como fallback
                     sheet = workbook.getSheetAt(0);
                     log.info("Usando primeira planilha: {}", sheet.getSheetName());
                 }
@@ -162,7 +160,6 @@ public class DataImportService {
                 Map<String, String> rowData = new HashMap<>();
                 boolean hasData = false;
                 
-                // Mapeia valores por índice de coluna
                 for (int j = 0; j < row.getLastCellNum(); j++) {
                     Cell cell = row.getCell(j);
                     String value = cell != null ? getCellValue(cell) : "";
@@ -173,7 +170,6 @@ public class DataImportService {
                     }
                 }
                 
-                // Só adiciona a linha se tiver algum dado
                 if (hasData) {
                     rowData.put("_rowNumber", String.valueOf(i + 1));
                     rows.add(rowData);
@@ -213,7 +209,6 @@ public class DataImportService {
         
         List<ImportError> errors = new ArrayList<>();
         
-        // Busca o plot onde os espécimes serão cadastrados
         Plot plot = null;
         if (mapping.getPlotId() != null) {
             plot = plotRepository.findById(mapping.getPlotId())
@@ -229,7 +224,6 @@ public class DataImportService {
             try {
                 String scientificName = null;
                 
-                // Extrai o nome científico do mapeamento por índice
                 for (Map.Entry<Integer, String> entry : mapping.getColumnMapping().entrySet()) {
                     if ("scientificName".equals(entry.getValue())) {
                         scientificName = row.get(String.valueOf(entry.getKey()));
@@ -237,7 +231,6 @@ public class DataImportService {
                     }
                 }
                 
-                // Busca ou cria espécie
                 SpeciesTaxonomy species = null;
                 if (scientificName != null && !scientificName.isEmpty()) {
                     species = findOrCreateSpecies(
@@ -255,7 +248,6 @@ public class DataImportService {
                 
                 log.debug("Specimen criado com ID: {}", specimen.getId());
                 
-                // Cria SpeciesInfo se houver dados mapeados
                 SpeciesInfo speciesInfo = mapRowToSpeciesInfo(row, mapping, specimen);
                 if (speciesInfo != null) {
                     speciesInfo = speciesInfoRepository.save(speciesInfo);
@@ -302,7 +294,6 @@ public class DataImportService {
         
         Map<Integer, String> columnMapping = mapping.getColumnMapping();
         
-        // Mapeia os campos baseado no mapping fornecido (índice -> campo)
         for (Map.Entry<Integer, String> entry : columnMapping.entrySet()) {
             Integer columnIndex = entry.getKey();
             String targetField = entry.getValue();
@@ -324,7 +315,6 @@ public class DataImportService {
                 case "latitude" -> specimen.setLatitude(parseBigDecimal(value));
                 case "longitude" -> specimen.setLongitude(parseBigDecimal(value));
                 case "scientificName" -> {}
-                // Campos de SpeciesInfo são tratados em mapRowToSpeciesInfo
                 case "heightM", "dbmCm", "ageYears", "condition", "observationDate" -> {}
                 default -> log.warn("Campo desconhecido para mapeamento: {}", field);
             }
@@ -343,7 +333,7 @@ public class DataImportService {
         
         SpeciesInfo.SpeciesInfoBuilder builder = SpeciesInfo.builder()
             .object(specimen)
-            .observationDate(LocalDateTime.now()); // Default to now
+            .observationDate(LocalDateTime.now());
         
         log.debug("Mapeando SpeciesInfo para specimen ID: {}", specimen.getId());
         
@@ -417,7 +407,6 @@ public class DataImportService {
         }
         
         try {
-            // Remove possíveis caracteres não numéricos
             value = value.replace(",", ".").trim();
             return new BigDecimal(value);
         } catch (NumberFormatException e) {
@@ -457,7 +446,6 @@ public class DataImportService {
             return null;
         }
         
-        // Tenta vários formatos comuns
         DateTimeFormatter[] formatters = {
             DateTimeFormatter.ISO_LOCAL_DATE_TIME,
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
@@ -472,7 +460,6 @@ public class DataImportService {
             try {
                 return LocalDateTime.parse(value.trim(), formatter);
             } catch (DateTimeParseException e) {
-                // Tenta próximo formato
             }
         }
         
@@ -481,20 +468,17 @@ public class DataImportService {
     }
 
     private SpeciesTaxonomy findOrCreateSpecies(String scientificName, Boolean autoCreate) {
-        // Busca espécie existente por nome científico, nome comum, família ou gênero
         List<SpeciesTaxonomy> matchingSpecies = speciesTaxonomyRepository.findByAnyName(scientificName);
         
         SpeciesTaxonomy species = null;
         if (!matchingSpecies.isEmpty()) {
-            // Prioriza correspondência exata no nome científico
             species = matchingSpecies.stream()
                 .filter(s -> scientificName.equalsIgnoreCase(s.getScientificName()))
                 .findFirst()
-                .orElse(matchingSpecies.get(0)); // Caso contrário, usa a primeira correspondência
+                .orElse(matchingSpecies.get(0));
         }
         
         if (species == null && Boolean.TRUE.equals(autoCreate)) {
-            // Cria nova espécie
             species = SpeciesTaxonomy.builder()
                 .scientificName(scientificName)
                 .build();

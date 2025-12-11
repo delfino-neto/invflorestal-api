@@ -27,9 +27,6 @@ public class SpeciesInfoService {
     private final SpeciesInfoRepository speciesInfoRepository;
     private final SpecimenObjectRepository specimenObjectRepository;
 
-    /**
-     * Cria uma nova informação/medição para um espécime
-     */
     @Transactional
     public SpeciesInfoDTO create(CreateSpeciesInfoDTO dto) {
         SpecimenObject specimen = specimenObjectRepository.findById(dto.getObjectId())
@@ -51,9 +48,6 @@ public class SpeciesInfoService {
         return toDTO(saved);
     }
 
-    /**
-     * Busca todas as informações/histórico de um espécime
-     */
     @Transactional(readOnly = true)
     public List<SpeciesInfoDTO> getHistoryBySpecimenId(Long specimenId) {
         List<SpeciesInfo> history = speciesInfoRepository.findByObjectIdOrderByObservationDateDesc(specimenId);
@@ -62,9 +56,6 @@ public class SpeciesInfoService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Busca o histórico de um espécime com paginação
-     */
     @Transactional(readOnly = true)
     public Page<SpeciesInfoDTO> getHistoryBySpecimenId(Long specimenId, int page, int size) {
         SpecimenObject specimen = specimenObjectRepository.findById(specimenId)
@@ -79,9 +70,6 @@ public class SpeciesInfoService {
         return historyPage.map(this::toDTO);
     }
 
-    /**
-     * Busca a informação mais recente de um espécime
-     */
     @Transactional(readOnly = true)
     public SpeciesInfoDTO getLatestBySpecimenId(Long specimenId) {
         return speciesInfoRepository.findLatestByObjectId(specimenId)
@@ -89,9 +77,6 @@ public class SpeciesInfoService {
                 .orElse(null);
     }
 
-    /**
-     * Busca uma informação específica por ID
-     */
     @Transactional(readOnly = true)
     public SpeciesInfoDTO getById(Long id) {
         return speciesInfoRepository.findById(id)
@@ -102,9 +87,6 @@ public class SpeciesInfoService {
                 ));
     }
 
-    /**
-     * Atualiza uma informação existente
-     */
     @Transactional
     public SpeciesInfoDTO update(Long id, CreateSpeciesInfoDTO dto) {
         SpeciesInfo existing = speciesInfoRepository.findById(id)
@@ -113,7 +95,6 @@ public class SpeciesInfoService {
                         "Informação não encontrada com ID: " + id
                 ));
 
-        // Atualiza os campos (exceto object_id e observation_date que não devem mudar)
         if (dto.getHeightM() != null) {
             existing.setHeightM(dto.getHeightM());
         }
@@ -131,9 +112,6 @@ public class SpeciesInfoService {
         return toDTO(updated);
     }
 
-    /**
-     * Deleta uma informação
-     */
     @Transactional
     public void delete(Long id) {
         if (!speciesInfoRepository.existsById(id)) {
@@ -145,9 +123,6 @@ public class SpeciesInfoService {
         speciesInfoRepository.deleteById(id);
     }
 
-    /**
-     * Conta quantas observações um espécime possui
-     */
     @Transactional(readOnly = true)
     public long countBySpecimenId(Long specimenId) {
         SpecimenObject specimen = specimenObjectRepository.findById(specimenId)
@@ -158,9 +133,6 @@ public class SpeciesInfoService {
         return speciesInfoRepository.countByObject(specimen);
     }
 
-    /**
-     * Converte entidade para DTO
-     */
     private SpeciesInfoDTO toDTO(SpeciesInfo info) {
         return SpeciesInfoDTO.builder()
                 .id(info.getId())

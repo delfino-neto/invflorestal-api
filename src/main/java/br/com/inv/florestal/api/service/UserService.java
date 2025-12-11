@@ -38,18 +38,15 @@ public class UserService {
     @Transactional
     @Auditable(action = br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.CREATE, entityName = "User", description = "Novo usuário criado")
     public UserRepresentation create(UserRequest request) {
-        // Verificar se o email já existe
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
 
-        // Buscar roles
         List<Role> roles = List.of();
         if (request.getRoleIds() != null && !request.getRoleIds().isEmpty()) {
             roles = roleRepository.findAllById(request.getRoleIds());
         }
 
-        // Criar usuário
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -71,7 +68,6 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Verificar se o email já existe (exceto para o próprio usuário)
         if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
             if (userRepository.existsByEmail(request.getEmail())) {
                 throw new RuntimeException("Email already exists");
@@ -79,7 +75,6 @@ public class UserService {
             user.setEmail(request.getEmail());
         }
 
-        // Atualizar campos
         if (request.getFirstName() != null) {
             user.setFirstName(request.getFirstName());
         }

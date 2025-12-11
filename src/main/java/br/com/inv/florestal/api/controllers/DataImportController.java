@@ -24,26 +24,6 @@ public class DataImportController {
     private final DataImportService importService;
     private final ObjectMapper objectMapper;
 
-    /**
-     * Importa espécimes de arquivo CSV ou Excel
-     * 
-     * @param file Arquivo CSV (separado por tab) ou Excel (.xlsx)
-     * @param mappingJson JSON com mapeamento de colunas por índice
-     * 
-     * Exemplo de mappingJson:
-     * {
-     *   "columnMapping": {
-     *     "0": "scientificName",  // Primeira coluna (índice 0) = nome científico
-     *     "3": "latitude",        // Quarta coluna (índice 3) = latitude
-     *     "4": "longitude"        // Quinta coluna (índice 4) = longitude
-     *   },
-     *   "startRow": 1,            // Linha inicial (ignora header na linha 0)
-     *   "autoCreateSpecies": true,
-     *   "collectionAreaId": 1
-     * }
-     * 
-     * @return Resultado da importação com estatísticas e erros
-     */
     @PostMapping("/specimens")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ImportResultResponse> importSpecimens(

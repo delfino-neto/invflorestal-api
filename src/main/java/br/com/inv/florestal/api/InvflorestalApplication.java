@@ -24,10 +24,7 @@ public class InvflorestalApplication {
 	@Bean
 	public CommandLineRunner init(StorageService storageService, RoleRepository roleRepository) {
 		return args -> {
-			// Initialize storage
-			storageService.init();
-			
-			// Initialize roles
+			storageService.init();			
 			if(roleRepository.findByName("USER").isEmpty()){
 				roleRepository.save(Role.builder().name("USER").build());
 			}

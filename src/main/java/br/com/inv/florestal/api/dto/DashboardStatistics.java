@@ -13,7 +13,7 @@ public class DashboardStatistics {
     private Long totalSpecimens;
     private Long totalSpecies;
     private Long totalCollectionAreas;
-    private Long recentSpecimens; // últimos 7 dias
+    private Long recentSpecimens;
     private List<SpeciesDistribution> topSpecies;
     private List<RecentActivity> recentActivities;
     

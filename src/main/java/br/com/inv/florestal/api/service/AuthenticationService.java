@@ -48,7 +48,6 @@ public class AuthenticationService {
         .build();
 
         userRepository.save(user);
-        // sendValidationEmail();
     }
 
     @Auditable(action = br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.LOGIN, entityName = "User", description = "Login realizado")
@@ -57,14 +56,12 @@ public class AuthenticationService {
             new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
         
-        // Define o contexto de segurança ANTES de chamar o audit
         SecurityContextHolder.getContext().setAuthentication(auth);
         
         HashMap<String,Object> claims = new HashMap<String, Object>();
         User user = (User) auth.getPrincipal();
         claims.put("fullName", user.fullName());
 
-        // Update last login timestamp
         user.setLastLogin(java.time.LocalDateTime.now());
         userRepository.save(user);
 
@@ -86,7 +83,6 @@ public class AuthenticationService {
                     claims.put("fullName", user.fullName());
                     String newToken = jwtService.generateToken(claims, user);
                     
-                    // Opcionalmente, gera um novo refresh token (token rotation)
                     RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getEmail());
                     
                     return AuthenticationResponse.builder()

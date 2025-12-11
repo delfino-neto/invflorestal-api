@@ -50,7 +50,6 @@ public class AuditService {
         Object oldValue,
         Object newValue
     ) {
-        // Captura informações do contexto HTTP na thread principal
         String ipAddress = null;
         String userAgent = null;
         
@@ -69,7 +68,6 @@ public class AuditService {
             log.debug("Could not capture request information for audit log", e);
         }
         
-        // Passa as informações capturadas para o método assíncrono
         persistAuditLogAsync(action, entityName, entityId, description, oldValue, newValue, ipAddress, userAgent);
     }
 
@@ -95,7 +93,6 @@ public class AuditService {
                 .description(description)
                 .timestamp(LocalDateTime.now());
 
-            // Captura informações do usuário autenticado
             if (authentication != null && authentication.isAuthenticated() 
                 && !(authentication.getPrincipal() instanceof String)) {
                 User user = (User) authentication.getPrincipal();
@@ -104,7 +101,6 @@ public class AuditService {
                     .userEmail(user.getEmail());
             }
 
-            // Usa os valores capturados antes da execução assíncrona
             builder.ipAddress(ipAddress);
             builder.userAgent(userAgent);
 
@@ -147,7 +143,6 @@ public class AuditService {
         for (String header : headers) {
             String ip = request.getHeader(header);
             if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-                // Pega o primeiro IP se houver múltiplos (proxy chain)
                 return ip.split(",")[0].trim();
             }
         }

@@ -28,7 +28,6 @@ public class RefreshTokenService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         
-        // Remove tokens antigos do usuário
         refreshTokenRepository.deleteByUser(user);
         
         RefreshToken refreshToken = RefreshToken.builder()

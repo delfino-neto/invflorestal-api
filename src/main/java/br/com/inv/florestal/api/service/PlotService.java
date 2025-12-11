@@ -33,11 +33,9 @@ public class PlotService {
 
     @Transactional
     public PlotRepresentation create(PlotRequest request) {
-        // Validar se a área existe
         collectionAreaRepository.findById(request.getAreaId())
                 .orElseThrow(() -> new RuntimeException("Collection Area not found"));
 
-        // Usar query nativa para fazer o cast do geometry
         String sql = "INSERT INTO plot (area_id, geometry, plot_code, area_m2, slope_deg, aspect_deg, notes, created_at) " +
                      "VALUES (?1, CAST(?2 AS polygon), ?3, ?4, ?5, ?6, ?7, CURRENT_TIMESTAMP) RETURNING id";
         
@@ -51,7 +49,6 @@ public class PlotService {
                 .setParameter(7, request.getNotes())
                 .getSingleResult()).longValue();
         
-        // Buscar o registro completo
         Plot plot = plotRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Failed to create plot"));
         
@@ -74,15 +71,12 @@ public class PlotService {
 
     @Transactional
     public PlotRepresentation update(Long id, PlotRequest request) {
-        // Verificar se o plot existe
         plotRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Plot not found"));
 
-        // Validar se a área existe
         collectionAreaRepository.findById(request.getAreaId())
                 .orElseThrow(() -> new RuntimeException("Collection Area not found"));
 
-        // Usar query nativa para fazer o cast do geometry
         String sql = "UPDATE plot SET area_id = ?1, geometry = CAST(?2 AS polygon), " +
                      "plot_code = ?3, area_m2 = ?4, slope_deg = ?5, aspect_deg = ?6, " +
                      "notes = ?7, updated_at = CURRENT_TIMESTAMP WHERE id = ?8";
@@ -98,7 +92,6 @@ public class PlotService {
                 .setParameter(8, id)
                 .executeUpdate();
         
-        // Buscar o registro atualizado
         Plot updatedPlot = plotRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Failed to update plot"));
         
@@ -111,7 +104,6 @@ public class PlotService {
 
     @Transactional
     public PlotRepresentation importPlot(PlotImportRequest request) {
-        // Validar área de destino
         collectionAreaRepository.findById(request.getTargetAreaId())
                 .orElseThrow(() -> new RuntimeException("Target Collection Area not found"));
 
@@ -122,24 +114,19 @@ public class PlotService {
         String notes = "";
 
         if (request.getImportType() == PlotImportRequest.ImportType.AREA) {
-            // Importar área inteira como um único plot
             CollectionArea sourceArea = collectionAreaRepository.findById(request.getSourceAreaId())
                     .orElseThrow(() -> new RuntimeException("Source Collection Area not found"));
             
-            // Usar a geometria da área
             geometry = sourceArea.getGeometry();
             
-            // Buscar todos os plots da área fonte para calcular médias
             List<Plot> sourcePlots = plotRepository.findByAreaId(request.getSourceAreaId(), PageRequest.of(0, 1000)).getContent();
             
             if (!sourcePlots.isEmpty()) {
-                // Calcular área total
                 totalArea = sourcePlots.stream()
                         .map(Plot::getAreaM2)
                         .filter(area -> area != null)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
                 
-                // Calcular média de inclinação
                 long slopeCount = sourcePlots.stream().filter(p -> p.getSlopeDeg() != null).count();
                 if (slopeCount > 0) {
                     BigDecimal slopeSum = sourcePlots.stream()
@@ -149,7 +136,6 @@ public class PlotService {
                     avgSlope = slopeSum.divide(BigDecimal.valueOf(slopeCount), 2, RoundingMode.HALF_UP);
                 }
                 
-                // Calcular média de aspecto
                 long aspectCount = sourcePlots.stream().filter(p -> p.getAspectDeg() != null).count();
                 if (aspectCount > 0) {
                     BigDecimal aspectSum = sourcePlots.stream()
@@ -166,7 +152,6 @@ public class PlotService {
             }
             
         } else if (request.getImportType() == PlotImportRequest.ImportType.PLOT) {
-            // Importar plot individual
             Plot sourcePlot = plotRepository.findById(request.getSourcePlotId())
                     .orElseThrow(() -> new RuntimeException("Source Plot not found"));
             
@@ -177,7 +162,6 @@ public class PlotService {
             notes = String.format("Importado do plot '%s' da área '%s'", 
                     sourcePlot.getPlotCode(), sourcePlot.getArea().getName());
             
-            // Concatenar notas se existirem
             if (sourcePlot.getNotes() != null && !sourcePlot.getNotes().isEmpty()) {
                 notes += "\nNotas originais: " + sourcePlot.getNotes();
             }
@@ -185,7 +169,6 @@ public class PlotService {
             throw new RuntimeException("Invalid import type");
         }
 
-        // Criar o novo plot usando query nativa
         String sql = "INSERT INTO plot (area_id, geometry, plot_code, area_m2, slope_deg, aspect_deg, notes, created_at) " +
                      "VALUES (?1, CAST(?2 AS polygon), ?3, ?4, ?5, ?6, ?7, CURRENT_TIMESTAMP) RETURNING id";
         
@@ -199,7 +182,6 @@ public class PlotService {
                 .setParameter(7, notes)
                 .getSingleResult()).longValue();
         
-        // Buscar o registro completo
         Plot plot = plotRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Failed to import plot"));
         
@@ -208,7 +190,6 @@ public class PlotService {
 
     @Transactional
     public List<PlotRepresentation> importPlots(BulkPlotImportRequest bulkRequest) {
-        // Validar área de destino
         collectionAreaRepository.findById(bulkRequest.getTargetAreaId())
                 .orElseThrow(() -> new RuntimeException("Target Collection Area not found"));
 
@@ -222,7 +203,6 @@ public class PlotService {
             String notes = "";
 
             if (item.getImportType() == BulkPlotImportRequest.ImportType.AREA) {
-                // Importar área inteira como um único plot
                 CollectionArea sourceArea = collectionAreaRepository.findById(item.getSourceAreaId())
                         .orElseThrow(() -> new RuntimeException("Source Collection Area not found"));
                 
@@ -261,7 +241,6 @@ public class PlotService {
                 }
                 
             } else if (item.getImportType() == BulkPlotImportRequest.ImportType.PLOT) {
-                // Importar plot individual
                 Plot sourcePlot = plotRepository.findById(item.getSourcePlotId())
                         .orElseThrow(() -> new RuntimeException("Source Plot not found"));
                 
@@ -279,7 +258,6 @@ public class PlotService {
                 throw new RuntimeException("Invalid import type");
             }
 
-            // Criar o novo plot
             String sql = "INSERT INTO plot (area_id, geometry, plot_code, area_m2, slope_deg, aspect_deg, notes, created_at) " +
                          "VALUES (?1, CAST(?2 AS polygon), ?3, ?4, ?5, ?6, ?7, CURRENT_TIMESTAMP) RETURNING id";
             

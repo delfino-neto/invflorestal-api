@@ -43,7 +43,6 @@ public class FileSystemStorageService implements StorageService {
                 throw new StorageException("Failed to store empty file.");
             }
 
-            // Generate unique filename
             String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
             String extension = "";
             if (originalFilename.contains(".")) {
@@ -56,7 +55,6 @@ public class FileSystemStorageService implements StorageService {
                     .normalize().toAbsolutePath();
 
             if (!destinationFile.getParent().equals(this.rootLocation.toAbsolutePath())) {
-                // This is a security check
                 throw new StorageException("Cannot store file outside current directory.");
             }
 
@@ -111,19 +109,16 @@ public class FileSystemStorageService implements StorageService {
                 throw new StorageException("Could not read image file: " + filename);
             }
 
-            // Calcular altura mantendo aspect ratio
             int originalWidth = originalImage.getWidth();
             int originalHeight = originalImage.getHeight();
             int height = (int) ((double) originalHeight / originalWidth * width);
 
-            // Criar thumbnail
             Image scaledImage = originalImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
             BufferedImage thumbnail = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             Graphics2D g2d = thumbnail.createGraphics();
             g2d.drawImage(scaledImage, 0, 0, null);
             g2d.dispose();
 
-            // Converter para byte array
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(thumbnail, "jpg", baos);
             byte[] thumbnailBytes = baos.toByteArray();

@@ -30,18 +30,15 @@ public class AuditAspect {
         Object result = null;
         
         try {
-            // Para UPDATE e DELETE, captura o valor antigo antes de executar o método
             if (auditable.action() == br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.UPDATE ||
                 auditable.action() == br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.DELETE) {
                 String entityId = extractEntityId(args, null, auditable.action());
                 if (!entityId.equals("unknown")) {
                     try {
-                        // Tenta buscar o valor antigo através de um método findById
                         Object target = joinPoint.getTarget();
                         var findByIdMethod = target.getClass().getMethod("findById", Long.class);
                         Object findResult = findByIdMethod.invoke(target, Long.parseLong(entityId));
                         
-                        // Extrai o valor do Optional se necessário
                         if (findResult instanceof java.util.Optional) {
                             java.util.Optional<?> optional = (java.util.Optional<?>) findResult;
                             oldValue = optional.orElse(null);
@@ -54,10 +51,8 @@ public class AuditAspect {
                 }
             }
             
-            // Executa o método original
             result = joinPoint.proceed();
             
-            // Determina o ID da entidade
             String entityId = extractEntityId(args, result, auditable.action());
             String entityName = auditable.entityName().isEmpty() 
                 ? extractEntityName(signature.getDeclaringType().getSimpleName())
@@ -67,29 +62,24 @@ public class AuditAspect {
                 ? generateDescription(auditable.action(), entityName)
                 : auditable.description();
             
-            // Determina os valores old/new baseado na ação
             Object newValue = null;
             switch (auditable.action()) {
                 case CREATE:
-                    newValue = result; // Valor criado
+                    newValue = result;
                     break;
                 case UPDATE:
-                    newValue = result; // Valor atualizado (oldValue já foi capturado antes)
+                    newValue = result;
                     break;
                 case DELETE:
-                    // Para DELETE, oldValue já foi capturado antes
-                    // Se o método retornar algo, pode ser usado como confirmação
                     if (result != null) {
                         oldValue = result;
                     }
                     break;
                 default:
-                    // Para outras ações, registra apenas o resultado
                     newValue = result;
                     break;
             }
             
-            // Registra a auditoria
             auditService.logAction(
                 auditable.action(),
                 entityName,
@@ -108,7 +98,6 @@ public class AuditAspect {
     }
 
     private String extractEntityId(Object[] args, Object result, br.com.inv.florestal.api.models.audit.AuditLog.AuditAction action) {
-        // Para LOGIN, extrai o ID do usuário autenticado
         if (action == br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.LOGIN) {
             try {
                 Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -131,16 +120,13 @@ public class AuditAspect {
                 return firstArg.toString();
             }
             
-            // Tenta extrair ID via reflection
             try {
                 var idMethod = firstArg.getClass().getMethod("getId");
                 Object id = idMethod.invoke(firstArg);
                 if (id != null) {
                     return id.toString();
                 }
-            } catch (Exception e) {
-                // Ignora se não encontrar método getId
-            }
+            } catch (Exception e) {}
         }
         
         return "unknown";

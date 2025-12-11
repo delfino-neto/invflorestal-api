@@ -13,23 +13,23 @@ import java.util.List;
 @NoArgsConstructor
 public class BulkPlotImportRequest {
     
-    private Long targetAreaId; // Área de destino
+    private Long targetAreaId;
     
-    private List<ImportItem> items; // Lista de itens a importar
+    private List<ImportItem> items;
     
     @Data
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
     public static class ImportItem {
-        private ImportType importType; // AREA ou PLOT
-        private Long sourceAreaId; // ID da área fonte (quando importType = AREA)
-        private Long sourcePlotId; // ID do plot fonte (quando importType = PLOT)
-        private String plotCode; // Código do novo plot
+        private ImportType importType;
+        private Long sourceAreaId;
+        private Long sourcePlotId;
+        private String plotCode;
     }
     
     public enum ImportType {
-        AREA,  // Importar área inteira como um único plot
-        PLOT   // Importar plot individual
+        AREA, 
+        PLOT
     }
 }

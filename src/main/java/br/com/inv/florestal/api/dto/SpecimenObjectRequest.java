@@ -21,7 +21,7 @@ public class SpecimenObjectRequest {
     private BigDecimal longitude;
     private Long observerId;
     
-    // SpeciesInfo fields
+    // SpeciesInfo
     private LocalDateTime observationDate;
     private BigDecimal heightM;
     private BigDecimal dbmCm;

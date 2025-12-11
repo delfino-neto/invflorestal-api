@@ -35,7 +35,6 @@ public class CollectionAreaService {
         User createdBy = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
 
-        // Usar query nativa para fazer o cast do geometry
         String sql = "INSERT INTO collection_area (name, geometry, created_by, notes, biome, " +
                      "climate_zone, soil_type, conservation_status, vegetation_type, altitude_m, " +
                      "protected_area, protected_area_name, land_owner, created_at) " +
@@ -57,7 +56,6 @@ public class CollectionAreaService {
                 .setParameter(13, request.getLandOwner())
                 .getSingleResult()).longValue();
         
-        // Buscar o registro completo
         CollectionArea collectionArea = collectionAreaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Failed to create collection area"));
         
@@ -78,15 +76,12 @@ public class CollectionAreaService {
     @Transactional
     @Auditable(action = AuditAction.UPDATE, entityName = "CollectionArea", description = "Área de coleta atualizada")
     public CollectionAreaRepresentation update(Long id, CollectionAreaRequest request, String userEmail) {
-        // Validar se o usuário existe
         userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + userEmail));
 
-        // Verificar se a área existe
         CollectionArea collectionArea = collectionAreaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Collection Area not found"));
 
-        // Usar query nativa para fazer o cast do geometry
         String sql = "UPDATE collection_area SET name = ?1, geometry = CAST(?2 AS polygon), " +
                      "notes = ?3, biome = ?4, climate_zone = ?5, soil_type = ?6, " +
                      "conservation_status = ?7, vegetation_type = ?8, altitude_m = ?9, " +
@@ -109,7 +104,6 @@ public class CollectionAreaService {
                 .setParameter(13, id)
                 .executeUpdate();
         
-        // Buscar o registro atualizado
         collectionArea = collectionAreaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Failed to update collection area"));
 

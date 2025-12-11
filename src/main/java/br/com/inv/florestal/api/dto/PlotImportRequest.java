@@ -11,18 +11,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PlotImportRequest {
     
-    private Long targetAreaId; // Área de destino onde o plot será criado
+    private Long targetAreaId;
     
-    private ImportType importType; // AREA ou PLOT
+    private ImportType importType;
     
-    private Long sourceAreaId; // ID da área fonte (quando importType = AREA)
+    private Long sourceAreaId;
     
-    private Long sourcePlotId; // ID do plot fonte (quando importType = PLOT)
+    private Long sourcePlotId;
     
-    private String plotCode; // Código do novo plot
+    private String plotCode;
     
     public enum ImportType {
-        AREA,  // Importar área inteira como um único plot
-        PLOT   // Importar plot individual
+        AREA,
+        PLOT
     }
 }

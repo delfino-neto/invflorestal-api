@@ -87,7 +87,6 @@ public class MediaService {
         try {
             String filename = storageService.store(file);
             
-            // Adiciona metadados EXIF se houver GPS ou timestamp
             if (latitude != null || longitude != null || timestamp != null) {
                 try {
                     Path uploadPath = storageService.load(filename);
@@ -97,11 +96,7 @@ public class MediaService {
                         longitude, 
                         timestamp
                     );
-                    System.out.println("✅ Metadados EXIF adicionados à imagem: " + filename);
-                } catch (Exception e) {
-                    System.err.println("⚠️ Falha ao adicionar metadados EXIF: " + e.getMessage());
-                    // Não falha o upload se o EXIF não puder ser adicionado
-                }
+                } catch (Exception e) {}
             }
 
             Media media = Media.builder()
@@ -155,7 +150,6 @@ public class MediaService {
         Media media = mediaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Media not found"));
 
-        // Validar se o usuário atual é o dono do specimen
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = userRepository.findByEmail(authentication.getName())
         .orElseThrow(() -> new RuntimeException("User not found"));
@@ -170,9 +164,7 @@ public class MediaService {
                 String filename = url.substring(url.lastIndexOf("/") + 1);
                 storageService.delete(filename);
             }
-        } catch (Exception e) {
-            // Ignore file deletion errors
-        }
+        } catch (Exception e) {}
 
         mediaRepository.deleteById(id);
     }
@@ -194,9 +186,7 @@ public class MediaService {
                 String filename = url.substring(url.lastIndexOf("/") + 1);
                 storageService.delete(filename);
             }
-        } catch (Exception e) {
-            // Ignore file deletion errors
-        }
+        } catch (Exception e) {}
 
         mediaRepository.deleteById(media.getId());
     }

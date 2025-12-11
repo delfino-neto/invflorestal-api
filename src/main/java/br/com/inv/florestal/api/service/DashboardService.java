@@ -21,16 +21,13 @@ public class DashboardService {
     private final CollectionAreaRepository collectionAreaRepository;
     
     public DashboardStatistics getStatistics() {
-        // Contadores principais
         Long totalSpecimens = specimenObjectRepository.count();
         Long totalSpecies = speciesTaxonomyRepository.count();
         Long totalCollectionAreas = collectionAreaRepository.count();
         
-        // Espécimes recentes (últimos 7 dias)
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minus(7, ChronoUnit.DAYS);
         Long recentSpecimens = specimenObjectRepository.countRecentSpecimens(sevenDaysAgo);
         
-        // Top 5 espécies por quantidade de espécimes
         List<DashboardStatistics.SpeciesDistribution> topSpecies = 
             specimenObjectRepository.findTopSpeciesDistribution()
                 .stream()
@@ -41,7 +38,6 @@ public class DashboardService {
                     .build())
                 .collect(Collectors.toList());
         
-        // Atividades recentes
         List<DashboardStatistics.RecentActivity> recentActivities = 
             specimenObjectRepository.findRecentActivities()
                 .stream()

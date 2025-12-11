@@ -18,7 +18,7 @@ public class CreateSpeciesInfoDTO {
     @NotNull(message = "Object ID é obrigatório")
     private Long objectId;
     
-    private LocalDateTime observationDate; // Se null, usa LocalDateTime.now()
+    private LocalDateTime observationDate;
     
     private BigDecimal heightM;
     
