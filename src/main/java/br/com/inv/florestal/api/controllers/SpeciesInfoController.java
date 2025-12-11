@@ -21,9 +21,6 @@ public class SpeciesInfoController {
 
     private final SpeciesInfoService speciesInfoService;
 
-    /**
-     * Cria uma nova observação/medição para um espécime
-     */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SpeciesInfoDTO> create(@Valid @RequestBody CreateSpeciesInfoDTO dto) {
@@ -31,27 +28,18 @@ public class SpeciesInfoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    /**
-     * Busca uma informação específica por ID
-     */
     @GetMapping("/{id}")
     public ResponseEntity<SpeciesInfoDTO> getById(@PathVariable Long id) {
         SpeciesInfoDTO info = speciesInfoService.getById(id);
         return ResponseEntity.ok(info);
     }
 
-    /**
-     * Busca todo o histórico de um espécime
-     */
     @GetMapping("/specimen/{specimenId}/history")
     public ResponseEntity<List<SpeciesInfoDTO>> getHistory(@PathVariable Long specimenId) {
         List<SpeciesInfoDTO> history = speciesInfoService.getHistoryBySpecimenId(specimenId);
         return ResponseEntity.ok(history);
     }
 
-    /**
-     * Busca o histórico de um espécime com paginação
-     */
     @GetMapping("/specimen/{specimenId}/history/paginated")
     public ResponseEntity<Page<SpeciesInfoDTO>> getHistoryPaginated(
             @PathVariable Long specimenId,
@@ -62,9 +50,6 @@ public class SpeciesInfoController {
         return ResponseEntity.ok(historyPage);
     }
 
-    /**
-     * Busca a informação mais recente de um espécime
-     */
     @GetMapping("/specimen/{specimenId}/latest")
     public ResponseEntity<SpeciesInfoDTO> getLatest(@PathVariable Long specimenId) {
         SpeciesInfoDTO latest = speciesInfoService.getLatestBySpecimenId(specimenId);
@@ -74,18 +59,12 @@ public class SpeciesInfoController {
         return ResponseEntity.ok(latest);
     }
 
-    /**
-     * Conta quantas observações um espécime possui
-     */
     @GetMapping("/specimen/{specimenId}/count")
     public ResponseEntity<Long> count(@PathVariable Long specimenId) {
         long count = speciesInfoService.countBySpecimenId(specimenId);
         return ResponseEntity.ok(count);
     }
 
-    /**
-     * Atualiza uma informação existente
-     */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SpeciesInfoDTO> update(
@@ -96,9 +75,6 @@ public class SpeciesInfoController {
         return ResponseEntity.ok(updated);
     }
 
-    /**
-     * Deleta uma informação
-     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {

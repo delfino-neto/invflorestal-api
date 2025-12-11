@@ -29,14 +29,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * Serviço para gerenciamento de Espécimes (SpecimenObject)
- * 
- * Responsável por:
- * - CRUD de espécimes
- * - Busca de imagens associadas ao espécime via MediaRepository
- * - Conversão para DTO com dados completos (espécie, parcela, observador, imagens)
- */
 @Service
 @RequiredArgsConstructor
 public class SpecimenObjectService {
@@ -207,9 +199,6 @@ public class SpecimenObjectService {
                 .build();
     }
 
-    /**
-     * Busca todas as URLs de imagens associadas a um espécime
-     */
     private List<String> getSpecimenImages(Long specimenObjectId) {
         return mediaRepository.findByObjectId(specimenObjectId, PageRequest.of(0, 100))
                 .getContent()
