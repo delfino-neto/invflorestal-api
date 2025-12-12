@@ -30,6 +30,9 @@ public class AuditAspect {
         Object result = null;
         
         try {
+
+            result = joinPoint.proceed();
+
             if (auditable.action() == br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.UPDATE ||
                 auditable.action() == br.com.inv.florestal.api.models.audit.AuditLog.AuditAction.DELETE) {
                 String entityId = extractEntityId(args, null, auditable.action());
@@ -37,8 +40,7 @@ public class AuditAspect {
                     try {
                         Object target = joinPoint.getTarget();
                         var findByIdMethod = target.getClass().getMethod("findById", Long.class);
-                        Object findResult = findByIdMethod.invoke(target, Long.parseLong(entityId));
-                        
+                        Object findResult = findByIdMethod.invoke(target, Long.parseLong(entityId));         
                         if (findResult instanceof java.util.Optional) {
                             java.util.Optional<?> optional = (java.util.Optional<?>) findResult;
                             oldValue = optional.orElse(null);
@@ -50,9 +52,7 @@ public class AuditAspect {
                     }
                 }
             }
-            
-            result = joinPoint.proceed();
-            
+                        
             String entityId = extractEntityId(args, result, auditable.action());
             String entityName = auditable.entityName().isEmpty() 
                 ? extractEntityName(signature.getDeclaringType().getSimpleName())
