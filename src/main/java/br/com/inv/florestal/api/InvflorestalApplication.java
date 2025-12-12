@@ -7,7 +7,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
-import br.com.inv.florestal.api.models.user.Role;
 import br.com.inv.florestal.api.repository.RoleRepository;
 import br.com.inv.florestal.api.storage.StorageProperties;
 import br.com.inv.florestal.api.storage.StorageService;
@@ -24,13 +23,7 @@ public class InvflorestalApplication {
 	@Bean
 	public CommandLineRunner init(StorageService storageService, RoleRepository roleRepository) {
 		return args -> {
-			storageService.init();			
-			if(roleRepository.findByName("USER").isEmpty()){
-				roleRepository.save(Role.builder().name("USER").build());
-			}
-			if(roleRepository.findByName("ADMIN").isEmpty()){
-				roleRepository.save(Role.builder().name("ADMIN").build());
-			}
+			storageService.init();
 		};
 	}
 }

@@ -1,0 +1,41 @@
+services:
+  invflorestal-api:
+    depends_on:
+      - invflorestal-postgres
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: invflorestal-api
+    image: invflorestal-api
+    hostname: invflorestal-api
+    volumes:
+      - uploads:/data/uploads
+    ports:
+      - "42069:42069"
+    networks:
+      - inv-network
+
+  invflorestal-postgres:
+    image: postgres:15
+    container_name: invflorestal-postgres
+    hostname: invflorestal-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: invflorestal
+      TZ: America/Fortaleza
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
+    networks:
+      - inv-network
+
+volumes:
+  postgres_data:
+  uploads:
+
+networks:
+  inv-network:
+    external: true
