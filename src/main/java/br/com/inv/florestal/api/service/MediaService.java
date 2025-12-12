@@ -50,12 +50,7 @@ public class MediaService {
 
     public MediaRepresentation uploadImage(Long objectId, MultipartFile file, String description, 
                                           Long uploadedById, Double latitude, Double longitude, Long timestamp) {
-        System.out.println("📸 [MediaService] Upload iniciado:");
-        System.out.println("   Arquivo: " + file.getOriginalFilename());
-        System.out.println("   Latitude: " + latitude);
-        System.out.println("   Longitude: " + longitude);
-        System.out.println("   Timestamp: " + timestamp);
-        
+
         if (file.isEmpty()) {
             throw new RuntimeException("File is empty");
         }
